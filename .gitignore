@@ -12,7 +12,6 @@ dist/
 .terraform/
 *.tfstate
 *.tfstate.*
-.terraform.lock.hcl
 # dbt
 transform/**/target/
 transform/**/dbt_packages/
@@ -26,3 +25,4 @@ data/
 # Misc
 *.bak
 .DS_Store
+*.tfplan
