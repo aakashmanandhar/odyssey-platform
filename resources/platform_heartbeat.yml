@@ -1,0 +1,10 @@
+resources:
+  jobs:
+    platform_heartbeat:
+      name: odyssey-platform-heartbeat
+      tasks:
+        - task_key: heartbeat
+          notebook_task:
+            notebook_path: ../jobs/heartbeat.py
+            base_parameters:
+              catalog: ${var.catalog}
