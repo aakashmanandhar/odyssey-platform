@@ -1,0 +1,14 @@
+# Odyssey pilot countries. Pipelines read this list; add a country here to scale out.
+countries:
+  - {iso2: NP, iso3: NPL, wikidata: Q837,  name: Nepal,       region: South Asia,      focus: [treks, altitude, terrain]}
+  - {iso2: JP, iso3: JPN, wikidata: Q17,   name: Japan,       region: East Asia,       focus: [food, etiquette, overtourism]}
+  - {iso2: TH, iso3: THA, wikidata: Q869,  name: Thailand,    region: Southeast Asia,  focus: [food, budget, seasonality]}
+  - {iso2: IT, iso3: ITA, wikidata: Q38,   name: Italy,       region: Southern Europe, focus: [food, heritage, overtourism]}
+  - {iso2: DE, iso3: DEU, wikidata: Q183,  name: Germany,     region: Central Europe,  focus: [rail, cities, stays]}
+  - {iso2: CH, iso3: CHE, wikidata: Q39,   name: Switzerland, region: Central Europe,  focus: [treks, cost]}
+  - {iso2: IS, iso3: ISL, wikidata: Q189,  name: Iceland,     region: Northern Europe, focus: [nature, seasonality]}
+  - {iso2: MA, iso3: MAR, wikidata: Q1028, name: Morocco,     region: North Africa,    focus: [etiquette, multilingual]}
+  - {iso2: TZ, iso3: TZA, wikidata: Q924,  name: Tanzania,    region: East Africa,     focus: [treks, parks]}
+  - {iso2: PE, iso3: PER, wikidata: Q419,  name: Peru,        region: South America,   focus: [treks, altitude, heritage]}
+  - {iso2: MX, iso3: MEX, wikidata: Q96,   name: Mexico,      region: North America,   focus: [food, multilingual]}
+  - {iso2: NZ, iso3: NZL, wikidata: Q664,  name: New Zealand, region: Oceania,         focus: [treks, nature]}
