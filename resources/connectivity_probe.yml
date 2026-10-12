@@ -1,0 +1,10 @@
+resources:
+  jobs:
+    connectivity_probe:
+      name: odyssey-connectivity-probe
+      tasks:
+        - task_key: probe
+          notebook_task:
+            notebook_path: ../jobs/connectivity_probe.py
+            base_parameters:
+              catalog: ${var.catalog}
