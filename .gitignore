@@ -1,0 +1,28 @@
+# Secrets
+.env
+*.env
+# Python
+__pycache__/
+*.pyc
+.venv/
+# Node / frontend
+node_modules/
+dist/
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+# dbt
+transform/**/target/
+transform/**/dbt_packages/
+transform/**/logs/
+# Databricks bundles
+.databricks/
+# Local data extracts (never commit raw data)
+data/
+*.parquet
+*.duckdb
+# Misc
+*.bak
+.DS_Store
