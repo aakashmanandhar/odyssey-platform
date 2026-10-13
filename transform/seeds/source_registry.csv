@@ -1,0 +1,17 @@
+source_id,source_name,feeds,method,cadence,phase,license,license_status,url,notes
+wikidata,Wikidata,countries;destinations;unesco;dishes;festivals,sparql,weekly,1,CC0,verified,https://query.wikidata.org,No conditions.
+worldbank_indicators,World Bank Indicators,arrivals;receipts;price_levels,rest_api,yearly,1,CC BY 4.0,verified,https://api.worldbank.org/v2,Attribution required. Replaces UN Tourism as the source for arrivals and receipts.
+travel_advisories,German Foreign Office advisories,advisory_levels,rest_api,daily,1,AA OpenData terms,verified,https://www.auswaertiges-amt.de/opendata,"Show complete and current, clearly attributed. Never LLM-summarized; AI answers mentioning safety carry a warning and link to the original. Register use with the Foreign Office before going live."
+ecb_fx,ECB exchange rates,fx_rates,rest_api,daily,1,ESCB reuse policy,verified,https://data.ecb.europa.eu,Free reuse; quote 'Source: ECB statistics.'; do not modify the published values.
+public_holidays,Python holidays package,holidays,python_package,yearly,1,MIT,verified,https://pypi.org/project/holidays/,Replaces the Nager.Date API (self-hosted use needs a license key; no clear data license).
+visa_matrix,Passport index dataset,visa_requirements,git_pull,monthly,1,MIT,verified,https://github.com/ilyankou/passport-index-dataset,Check the latest update date at ingestion; flag stale data on the Trust page.
+overture_places,Overture Maps Places,places,duckdb_bbox,monthly,2,CDLA-Permissive-2.0 / Apache-2.0 / CC0-1.0,verified,https://docs.overturemaps.org,"License is per record (sources[] field). Merged with OSM, the derived place layer is published under ODbL."
+osm,OpenStreetMap,places;cuisine_tags,pbf_extract,weekly,2,ODbL,verified,https://download.geofabrik.de,Attribution '© OpenStreetMap contributors'; derived databases share-alike (ODbL).
+foursquare_os_places,Foursquare Open Source Places,places;categories,hf_gated,monthly,2,Apache-2.0,verified,https://huggingface.co/datasets/foursquare/fsq-os-places,Attribution required. Gated on Hugging Face: needs an account and token.
+wikivoyage,Wikivoyage,guide_text;culture_cards,dump_parse,monthly,3,CC BY-SA,verified,https://dumps.wikimedia.org,Attribution and share-alike for derived text.
+osm_hiking_routes,OSM hiking routes,treks,pbf_extract,weekly,3,ODbL,verified,https://hiking.waymarkedtrails.org,Same terms as OSM.
+wikipedia_pageviews,Wikipedia pageviews,interest;crowd_seasonality,rest_api,daily,4,CC0,verified,https://wikimedia.org/api/rest_v1,Send a descriptive User-Agent.
+aurora_climate,Aurora climate gold tables,climate_comfort,cross_catalog,daily,4,Own data,verified,,Upstream data product from the Aurora platform.
+inside_airbnb,Inside Airbnb,stay_prices;reviews,csv_download,quarterly,4,CC BY 4.0,verified,https://insideairbnb.com,Attribution required.
+terrain_tiles,AWS Terrain Tiles,terrain;elevation_profiles,tile_read,static,7,Attribution (Tilezen/joerd),verified,https://registry.opendata.aws/terrain-tiles,"Attribution required for analysis and display, per the joerd attribution list."
+wikimedia_eventstreams,Wikimedia EventStreams,live_pulse,sse_stream,realtime,7,TBD,verify,https://stream.wikimedia.org,Deferred: resolve before Phase 7.

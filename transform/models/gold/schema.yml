@@ -1,0 +1,32 @@
+version: 2
+
+models:
+  - name: dim_date
+    description: "Calendar dimension, one row per day (2015-07-01 to 2030-12-31)."
+    columns:
+      - name: date_key
+        data_tests: [unique, not_null]
+      - name: date_day
+        data_tests: [unique, not_null]
+
+  - name: dim_month
+    description: "The 12 calendar months with quarter and hemisphere seasons."
+    columns:
+      - name: month
+        data_tests: [unique, not_null]
+      - name: season_north
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["winter", "spring", "summer", "autumn"]
+
+  - name: dim_source
+    description: "Source registry from config/sources.yml: license, cadence and phase per source."
+    columns:
+      - name: source_id
+        data_tests: [unique, not_null]
+      - name: license_status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["verified", "verify"]
