@@ -1,0 +1,16 @@
+name: odyssey
+version: "1.0.0"
+profile: odyssey
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+
+models:
+  odyssey:
+    +materialized: table
+    silver:
+      +schema: silver
+    gold:
+      +schema: gold
