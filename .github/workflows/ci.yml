@@ -56,14 +56,7 @@ jobs:
         run: |
           databricks bundle deploy -t dev
           databricks bundle run -t dev platform_heartbeat
-          databricks bundle run -t dev ingest_reference
-          databricks bundle run -t dev ingest_advisories
-          databricks bundle run -t dev ingest_fx
-      - name: dbt build (dev)
-        run: |
-          pip install "dbt-databricks~=1.10"
-          export DATABRICKS_HOST="${DATABRICKS_HOST#https://}"
-          DBT_TARGET=dev dbt build --project-dir transform --profiles-dir transform
+          databricks bundle run -t dev odyssey_weekly
 
   deploy-prod:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -80,11 +73,4 @@ jobs:
         run: |
           databricks bundle deploy -t prod
           databricks bundle run -t prod platform_heartbeat
-          databricks bundle run -t prod ingest_reference
-          databricks bundle run -t prod ingest_advisories
-          databricks bundle run -t prod ingest_fx
-      - name: dbt build (prod)
-        run: |
-          pip install "dbt-databricks~=1.10"
-          export DATABRICKS_HOST="${DATABRICKS_HOST#https://}"
-          DBT_TARGET=prod dbt build --project-dir transform --profiles-dir transform
+          databricks bundle run -t prod odyssey_weekly

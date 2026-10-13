@@ -3,7 +3,7 @@
 A data and AI platform that turns open travel data into explainable recommendations: where to go, when to go, and what to know before you go. Every number is traceable to its source.
 
 **Live:** https://aakashmanandhar.tech/odyssey (coming soon)
-**Status:** Phase 1, country backbone (Phase 0 complete)
+**Status:** Phase 2, places and entity resolution (Phases 0-1 complete)
 
 ## Architecture
 - **Lakehouse:** Databricks (Unity Catalog, Delta Lake), medallion layers (bronze, silver, gold) with a star schema
