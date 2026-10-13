@@ -13,3 +13,13 @@ resources:
             notebook_path: ../jobs/ingest_worldbank.py
             base_parameters:
               catalog: ${var.catalog}
+        - task_key: ingest_holidays
+          notebook_task:
+            notebook_path: ../jobs/ingest_holidays.py
+            base_parameters:
+              catalog: ${var.catalog}
+        - task_key: ingest_visa
+          notebook_task:
+            notebook_path: ../jobs/ingest_visa.py
+            base_parameters:
+              catalog: ${var.catalog}

@@ -44,3 +44,12 @@ Short records of significant decisions: context, decision, consequences. Newest 
 **Context:** The German Foreign Office publishes four warning flags per country (travel warning, partial travel warning, situation-specific notice, and the partial version), not a numeric level. Its texts are edited often without the risk status changing. It does not publish advice for Germany, its home country.
 **Decision:** A dbt snapshot (check strategy on the four flags) keeps the full history: a new version only when a flag changes, not on text edits. Silver derives an ordinal `advisory_level` 0-4 (our interpretation, always shown next to the official flags). `valid_from`/`valid_to` record when Odyssey observed a status; `effective_at` keeps the issuer's own date. Germany has no advisory rows, and the UI states why instead of implying "safe". An empty or truncated API response (fewer than 150 countries) fails ingestion, so it can never be mistaken for all advisories ending.
 **Consequences:** History starts on 2026-10-13 and grows with each daily run. Full advisory texts are shown complete and attributed in Phase 5, never LLM-summarized (ADR-003).
+
+## ADR-007: Exchange rates, holidays and visas
+**Date:** 2026-10-13
+**Context:** The ECB publishes current reference rates for CHF, ISK, JPY, MXN, NZD, THB and USD, but not NPR, PEN or TZS, and its MAD series ended in 2020. ECB CSVs use CRLF line endings, which Spark's trim does not remove. The passport-index visa data was last published 2025-01-12.
+**Decision:**
+- FX is ingested incrementally (backfill from 2015 on first run, then a 10-day overlapping window). A currency counts as ECB-covered only if its latest rate is under 14 days old; otherwise it falls back to the World Bank annual rate converted via the ECB USD/EUR average of the same year. Every rate carries its basis and as-of date. CSVs are split on `\r?\n` and columns are located by header name.
+- Holidays come from the `holidays` package (national calendars; Swiss cantonal holidays are out of scope), versioned per batch.
+- Visa data is pinned to the commit that last changed the file. The UI shows its date and directs travellers to official sources; a warn-level test flags data older than a year.
+**Consequences:** All 12 pilot currencies have a rate. Visa information is context, not authority, until a fresher open source exists.
