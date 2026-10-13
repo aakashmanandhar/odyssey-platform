@@ -1,0 +1,12 @@
+resources:
+  pipelines:
+    bronze_places:
+      name: odyssey-bronze-places
+      catalog: ${var.catalog}
+      schema: bronze
+      serverless: true
+      configuration:
+        landing_path: /Volumes/${var.catalog}/bronze/landing
+      libraries:
+        - file:
+            path: ../pipelines/bronze_places.sql
