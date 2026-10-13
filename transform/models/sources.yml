@@ -1,0 +1,15 @@
+version: 2
+
+sources:
+  - name: bronze
+    schema: bronze
+    config:
+      loaded_at_field: _ingested_at
+      freshness:
+        warn_after: {count: 8, period: day}
+        error_after: {count: 15, period: day}
+    tables:
+      - name: wikidata_raw
+        description: "Raw Wikidata SPARQL responses, one row per (query, country, batch)."
+      - name: wikivoyage_raw
+        description: "Raw Wikivoyage API responses, one row per (query, country, batch)."

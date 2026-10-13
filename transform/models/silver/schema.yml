@@ -1,0 +1,7 @@
+version: 2
+
+models:
+  - name: silver_country_facts
+    columns:
+      - name: country_iso3
+        data_tests: [unique, not_null]

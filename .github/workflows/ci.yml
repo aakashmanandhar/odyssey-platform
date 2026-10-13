@@ -56,6 +56,7 @@ jobs:
         run: |
           databricks bundle deploy -t dev
           databricks bundle run -t dev platform_heartbeat
+          databricks bundle run -t dev ingest_reference
       - name: dbt build (dev)
         run: |
           pip install "dbt-databricks~=1.10"
@@ -77,6 +78,7 @@ jobs:
         run: |
           databricks bundle deploy -t prod
           databricks bundle run -t prod platform_heartbeat
+          databricks bundle run -t prod ingest_reference
       - name: dbt build (prod)
         run: |
           pip install "dbt-databricks~=1.10"
