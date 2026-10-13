@@ -1,0 +1,34 @@
+resources:
+  jobs:
+    odyssey_daily:
+      name: odyssey-daily
+      schedule:
+        quartz_cron_expression: "0 0 6 * * ?"
+        timezone_id: Europe/Berlin
+      email_notifications:
+        on_failure: ["${workspace.current_user.userName}"]
+      environments:
+        - environment_key: dbt
+          spec:
+            environment_version: "2"
+            dependencies: ["dbt-databricks~=1.10"]
+      tasks:
+        - task_key: ingest_advisories
+          notebook_task:
+            notebook_path: ../jobs/ingest_advisories.py
+            base_parameters: {catalog: "${var.catalog}"}
+        - task_key: ingest_fx
+          notebook_task:
+            notebook_path: ../jobs/ingest_fx.py
+            base_parameters: {catalog: "${var.catalog}"}
+        - task_key: dbt_build
+          depends_on: [{task_key: ingest_advisories}, {task_key: ingest_fx}]
+          environment_key: dbt
+          dbt_task:
+            project_directory: ../transform
+            catalog: ${var.catalog}
+            schema: silver
+            warehouse_id: ${var.warehouse_id}
+            commands:
+              - "dbt build --select source:bronze.advisories_raw+ source:bronze.fx_raw+"
+              - "dbt source freshness --select source:bronze.advisories_raw source:bronze.fx_raw"

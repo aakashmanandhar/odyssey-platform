@@ -53,3 +53,9 @@ Short records of significant decisions: context, decision, consequences. Newest 
 - Holidays come from the `holidays` package (national calendars; Swiss cantonal holidays are out of scope), versioned per batch.
 - Visa data is pinned to the commit that last changed the file. The UI shows its date and directs travellers to official sources; a warn-level test flags data older than a year.
 **Consequences:** All 12 pilot currencies have a rate. Visa information is context, not authority, until a fresher open source exists.
+
+## ADR-008: Scheduled pipelines with dbt inside Databricks
+**Date:** 2026-10-13
+**Context:** Ingestion and dbt only ran when CI ran, i.e. on code changes. Advisories and exchange rates must refresh daily regardless.
+**Decision:** Two bundle jobs replace the three ingestion jobs. `odyssey-daily` (06:00 Europe/Berlin): advisories and FX, then dbt build of everything downstream of those sources (including the SCD2 snapshot), then source freshness. `odyssey-weekly` (Mondays 05:00): all six ingestions, full dbt build, source freshness. dbt runs as a Databricks dbt task on serverless with the profile Databricks generates (catalog and schema from the task; token injected at run time), so no token is stored. dbt only starts once every ingestion task succeeded; failures email the owner. Schedules are paused automatically in dev. CI runs `odyssey-weekly` on PRs (dev) and merges (prod), so the scheduled job itself is what CI tests.
+**Consequences:** The platform refreshes without human action. The Phase 1 gate is a permanent test on `mart_country_profile`.

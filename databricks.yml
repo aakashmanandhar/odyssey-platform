@@ -7,6 +7,9 @@ include:
 variables:
   catalog:
     description: Unity Catalog catalog used by this target
+  warehouse_id:
+    description: SQL warehouse that runs dbt
+    default: 7b6370e08ed8e9c0
 
 targets:
   dev:
