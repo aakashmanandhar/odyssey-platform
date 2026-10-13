@@ -8,3 +8,8 @@ resources:
             notebook_path: ../jobs/ingest_reference.py
             base_parameters:
               catalog: ${var.catalog}
+        - task_key: ingest_worldbank
+          notebook_task:
+            notebook_path: ../jobs/ingest_worldbank.py
+            base_parameters:
+              catalog: ${var.catalog}
