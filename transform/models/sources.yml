@@ -15,3 +15,9 @@ sources:
         description: "Raw Wikivoyage API responses, one row per (query, country, batch)."
       - name: worldbank_raw
         description: "Raw World Bank indicator responses, one row per (indicator, batch), all pilot countries."
+      - name: advisories_raw
+        description: "Raw German Foreign Office travel advisory list (all countries), one row per daily batch."
+        config:
+          freshness:
+            warn_after: {count: 2, period: day}
+            error_after: {count: 4, period: day}

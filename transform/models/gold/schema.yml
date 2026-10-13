@@ -86,3 +86,15 @@ models:
               arguments:
                 to: ref('dim_date')
                 field: date_key
+
+  - name: fact_advisory
+    description: "SCD2 travel advisory history for pilot countries (German Foreign Office). Shown complete and attributed, never LLM-summarized (ADR-003)."
+    columns:
+      - name: advisory_version_key
+        data_tests: [unique, not_null]
+      - name: country_key
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_country')
+                field: country_key

@@ -10,3 +10,14 @@ models:
     columns:
       - name: indicator_country_year_key
         data_tests: [unique, not_null]
+
+  - name: silver_advisories_current
+    columns:
+      - name: country_iso3
+        data_tests: [unique, not_null]
+      - name: advisory_level
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [0, 1, 2, 3, 4]
+                quote: false
