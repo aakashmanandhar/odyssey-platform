@@ -32,3 +32,9 @@ Short records of significant decisions: context, decision, consequences. Newest 
 **Decision:** A serverless job installs DuckDB, discovers the latest release by listing the public bucket, and extracts only places inside a bounding box into the bronze landing volume (`release=<id>/area=<name>`). Spark reads the file back and must match the DuckDB row count.
 **Evidence:** Kathmandu from release 2026-09-23.1: 40,081 places in 5.5 s of extract time, Spark row count matched, logged in `ops.extract_log`.
 **Consequences:** Bounding-box extraction is the ingestion pattern for all large geospatial sources; scaling out means adding bounding boxes, not code.
+
+## ADR-005: World Bank tourism series end in 2019/2020; pandemic years flagged
+**Date:** 2026-10-13
+**Context:** In the World Bank API, arrivals and receipts for the pilot countries end in 2019 or 2020 (Iceland's receipts in 2008), while population and price data run to 2025. 2020 is the pandemic collapse, so "latest arrivals" would badly misrepresent tourism today. The price level ratio indicator (PA.NUS.PPPC.RF) was retired, so it is computed as PA.NUS.PPP / PA.NUS.FCRF.
+**Decision:** `fact_tourism_country_year` flags 2020 and 2021 as `is_pandemic_year`. Volume-based metrics (arrivals per resident, overtourism) use 2019 as a labelled pre-pandemic baseline. Current demand comes from Wikipedia pageviews (Phase 4). Our World in Data's republished UN Tourism series is a candidate for newer figures, pending a license check.
+**Consequences:** The UI never presents 2020 figures as current. Coverage per country and measure is shown on the Trust page.

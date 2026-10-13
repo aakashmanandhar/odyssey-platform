@@ -1,6 +1,6 @@
--- One row per day. Starts 2015-07-01, where Wikipedia pageview history begins.
+-- One row per day, 2000-01-01 to 2030-12-31: covers World Bank history (pageviews start 2015-07-01).
 with days as (
-    select explode(sequence(to_date('2015-07-01'), to_date('2030-12-31'), interval 1 day)) as date_day
+    select explode(sequence(to_date('2000-01-01'), to_date('2030-12-31'), interval 1 day)) as date_day
 )
 select
     cast(date_format(date_day, 'yyyyMMdd') as int) as date_key,

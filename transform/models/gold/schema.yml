@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: dim_date
-    description: "Calendar dimension, one row per day (2015-07-01 to 2030-12-31)."
+    description: "Calendar dimension, one row per day (2000-01-01 to 2030-12-31)."
     columns:
       - name: date_key
         data_tests: [unique, not_null]
@@ -68,3 +68,21 @@ models:
         data_tests: [not_null]
       - name: lon
         data_tests: [not_null]
+
+  - name: fact_tourism_country_year
+    description: "One row per country and year: World Bank tourism, population and price data with derived metrics."
+    columns:
+      - name: country_year_key
+        data_tests: [unique, not_null]
+      - name: country_key
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_country')
+                field: country_key
+      - name: year_start_date_key
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
