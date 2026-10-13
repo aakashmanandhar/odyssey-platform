@@ -98,3 +98,42 @@ models:
               arguments:
                 to: ref('dim_country')
                 field: country_key
+
+  - name: fact_fx_rate_daily
+    description: "ECB euro reference rates per currency and day (units per 1 EUR)."
+    columns:
+      - name: currency_date_key
+        data_tests: [unique, not_null]
+
+  - name: dim_currency
+    description: "Latest rate per EUR for every currency Odyssey needs, with the basis of each rate."
+    columns:
+      - name: currency_key
+        data_tests: [unique, not_null]
+      - name: rate_per_eur
+        data_tests: [not_null]
+      - name: rate_basis
+        data_tests: [not_null]
+
+  - name: fact_public_holiday
+    description: "National public holidays per pilot country and date."
+    columns:
+      - name: country_holiday_key
+        data_tests: [unique, not_null]
+      - name: date_key
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+  - name: fact_visa_requirement
+    description: "Visa requirement per passport for each pilot destination (passport-index dataset, MIT)."
+    columns:
+      - name: passport_destination_key
+        data_tests: [unique, not_null]
+      - name: requirement_category
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["visa_free", "visa_on_arrival", "eta", "e_visa", "visa_required", "no_admission", "own_country"]
