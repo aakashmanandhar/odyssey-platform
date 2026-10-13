@@ -59,3 +59,12 @@ Short records of significant decisions: context, decision, consequences. Newest 
 **Context:** Ingestion and dbt only ran when CI ran, i.e. on code changes. Advisories and exchange rates must refresh daily regardless.
 **Decision:** Two bundle jobs replace the three ingestion jobs. `odyssey-daily` (06:00 Europe/Berlin): advisories and FX, then dbt build of everything downstream of those sources (including the SCD2 snapshot), then source freshness. `odyssey-weekly` (Mondays 05:00): all six ingestions, full dbt build, source freshness. dbt runs as a Databricks dbt task on serverless with the profile Databricks generates (catalog and schema from the task; token injected at run time), so no token is stored. dbt only starts once every ingestion task succeeded; failures email the owner. Schedules are paused automatically in dev. CI runs `odyssey-weekly` on PRs (dev) and merges (prod), so the scheduled job itself is what CI tests.
 **Consequences:** The platform refreshes without human action. The Phase 1 gate is a permanent test on `mart_country_profile`.
+
+## ADR-009: Places extraction per destination box, bronze via a declarative pipeline
+**Date:** 2026-10-13
+**Context:** Phase 2 needs places for all pilot destinations from Overture's global dataset, refreshed with each monthly release, inside Free Edition's limits.
+**Decision:**
+- One bounding box per destination (6 km radius for cities, 15 km for other destinations, longitude span widened by 1/cos(latitude)), extracted with DuckDB into `landing/overture_places/release=/country=/destination=`. Existing files for the current release are skipped, so reruns are free and a new release fills new folders. The full pilot (208 destinations) takes about 8 minutes.
+- A serverless Lakeflow Declarative Pipeline (Auto Loader) loads new landing files into `bronze.overture_places` exactly once, with expectations: missing ID or geometry rows are dropped and counted; missing lineage or out-of-range confidence is counted. First load: 3,313,022 rows, 0 dropped, all expectations passed.
+- Boxes overlap (e.g. Kathmandu, Lalitpur and Pharping share most of the Kathmandu Valley; 3,085,848 unique places). Silver de-duplicates by Overture ID and attributes each place to its nearest destination within that destination's radius.
+**Known limitation:** circles fit cities, not regions. Trekking regions and remote parks have coordinates far from their villages (Annapurna: 46 places; Manu National Park: 0). Region polygons are a later improvement; treks get route data in Phase 3.
