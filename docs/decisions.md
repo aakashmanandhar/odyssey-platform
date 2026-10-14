@@ -68,3 +68,12 @@ Short records of significant decisions: context, decision, consequences. Newest 
 - A serverless Lakeflow Declarative Pipeline (Auto Loader) loads new landing files into `bronze.overture_places` exactly once, with expectations: missing ID or geometry rows are dropped and counted; missing lineage or out-of-range confidence is counted. First load: 3,313,022 rows, 0 dropped, all expectations passed.
 - Boxes overlap (e.g. Kathmandu, Lalitpur and Pharping share most of the Kathmandu Valley; 3,085,848 unique places). Silver de-duplicates by Overture ID and attributes each place to its nearest destination within that destination's radius.
 **Known limitation:** circles fit cities, not regions. Trekking regions and remote parks have coordinates far from their villages (Annapurna: 46 places; Manu National Park: 0). Region polygons are a later improvement; treks get route data in Phase 3.
+
+## ADR-010: OSM paused; Foursquare added; training labels from exact source links
+**Date:** 2026-10-14
+**Context:** Public Overpass instances returned 504s and timeouts for all three mirrors, from Databricks and from a private IP alike, so a scheduled pipeline cannot depend on them. OSM's wikidata tags were also rarer than expected (0.3% of named places in Kathmandu). Foursquare OS Places (Apache-2.0, gated on Hugging Face) is spatially clustered in its Parquet files, so per-destination box reads with row-group pruning work.
+**Decision:**
+- OSM is paused: the Overpass extractor stays in the repo, unscheduled; a future OSM source should use bulk extracts with no live-server dependency.
+- Foursquare is extracted per destination box with DuckDB (object cache for file footers; token from the `odyssey` secret scope), excluding the native Parquet GEOMETRY column so Spark can read the files, and loaded by the bronze pipeline.
+- Entity-resolution labels come in three layers: exact Overture-to-Foursquare ID links (131,384 in the pilot, 99.9% resolvable), weak supervision (shared phone or website within a short distance, audited against the exact links), and a human-labelled set used only for evaluation.
+**Consequences:** Label supply is rich in Japan, Germany and Italy and thin in Nepal, Iceland, Morocco and Tanzania, which is where the human evaluation set concentrates.
