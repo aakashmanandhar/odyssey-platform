@@ -34,3 +34,15 @@ models:
           - accepted_values:
               arguments:
                 values: ["eat", "stay", "see", "do", "shop", "other"]
+
+  - name: er_pair_features
+    description: "Entity-resolution candidate pairs with model features and phone-derived weak labels (phone features excluded from training)."
+    columns:
+      - name: pair_key
+        data_tests: [unique, not_null]
+      - name: weak_label
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [0, 1]
+                quote: false

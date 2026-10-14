@@ -1,0 +1,12 @@
+resources:
+  jobs:
+    odyssey_ml:
+      name: odyssey-ml
+      email_notifications:
+        on_failure: ["${workspace.current_user.userName}"]
+      tasks:
+        - task_key: train_place_matcher
+          notebook_task:
+            notebook_path: ../ml/train_place_matcher.py
+            base_parameters:
+              catalog: ${var.catalog}
