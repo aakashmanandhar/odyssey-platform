@@ -46,3 +46,9 @@ models:
               arguments:
                 values: [0, 1]
                 quote: false
+
+  - name: place_id_registry
+    description: "Persistent source-record -> Odyssey place ID mapping; never deletes, so IDs stay stable across releases."
+    columns:
+      - name: place_source_key
+        data_tests: [unique, not_null]

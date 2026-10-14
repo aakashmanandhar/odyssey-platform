@@ -137,3 +137,14 @@ models:
           - accepted_values:
               arguments:
                 values: ["visa_free", "visa_on_arrival", "eta", "e_visa", "visa_required", "no_admission", "own_country"]
+
+  - name: dim_place
+    description: "Golden places: one row per real-world place merged from Overture and Foursquare, with survivorship and lineage."
+    columns:
+      - name: odyssey_place_id
+        data_tests: [unique, not_null]
+      - name: odyssey_category
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["eat", "stay", "see", "do", "shop", "other"]

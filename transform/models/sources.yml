@@ -43,3 +43,8 @@ sources:
           freshness:
             warn_after: {count: 35, period: day}
             error_after: {count: 45, period: day}
+  - name: ml
+    schema: ml
+    tables:
+      - name: er_pair_scores
+        description: "Match scores for every candidate pair, written by the place-matcher training notebook."
