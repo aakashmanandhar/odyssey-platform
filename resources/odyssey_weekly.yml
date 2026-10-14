@@ -52,5 +52,21 @@ resources:
             schema: silver
             warehouse_id: ${var.warehouse_id}
             commands:
-              - "dbt build"
+              - "dbt build --exclude tag:after_ml"
               - "dbt source freshness"
+        - task_key: train_place_matcher
+          depends_on: [{task_key: dbt_build}]
+          notebook_task:
+            notebook_path: ../ml/train_place_matcher.py
+            base_parameters:
+              catalog: ${var.catalog}
+        - task_key: dbt_build_places
+          depends_on: [{task_key: train_place_matcher}]
+          environment_key: dbt
+          dbt_task:
+            project_directory: ../transform
+            catalog: ${var.catalog}
+            schema: silver
+            warehouse_id: ${var.warehouse_id}
+            commands:
+              - "dbt build --select tag:after_ml"

@@ -100,3 +100,12 @@ Short records of significant decisions: context, decision, consequences. Newest 
 - The model (HistGradientBoosting) never sees phone features (enforced by an assert). The split is by destination (60/20/20) and the threshold is precision-first (>= 97% on validation). Tracked in MLflow and registered as `<catalog>.ml.place_matcher` (alias `champion`).
 **Results (unseen destinations, v1):** precision 0.961, recall 0.969, PR-AUC 0.995, recall on different-name matches 0.875.
 **Limitations:** weak labels over-represent businesses with phones; a human-labelled evaluation set is still needed. 115k Overture places have more than one accepted partner, which the next step (one-to-one clustering) resolves.
+
+## ADR-013: Golden places: mutual-best clustering, persistent ID registry, deterministic survivorship
+**Date:** 2026-10-14
+**Decision:**
+- A model-accepted pair is kept only if each side is the other's best-scoring partner (mutual best, one-to-one); other accepted pairs are held for human review. Clusters = a Foursquare place plus the Overture records linked to it by an exact copy link or a mutual-best model match; unlinked records are single-source golden places.
+- Odyssey place IDs live in an incremental registry (`place_id_registry`) that never deletes: clusters reuse their members' existing ID (smallest wins), the larger side of a split keeps it, new clusters get `odp_` + a SHA-256 prefix of their anchor (split losers hash anchor + lost ID, so no collisions).
+- Survivorship per attribute, deterministic via a weighted `max(named_struct(...))` macro: name and coordinates Foursquare-first; a real category beats `other`; phone and website from any source that has one; closed if any source says permanently closed. Each golden place keeps its sources, record keys, all names, match type and score.
+- The weekly job runs ingest -> dbt (excluding `tag:after_ml`) -> train and score -> dbt (`tag:after_ml`).
+**Result (dev):** 6,661,512 source records -> 5,423,286 golden places; a rebuild kept 100% of IDs.
