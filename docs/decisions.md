@@ -77,3 +77,12 @@ Short records of significant decisions: context, decision, consequences. Newest 
 - Foursquare is extracted per destination box with DuckDB (object cache for file footers; token from the `odyssey` secret scope), excluding the native Parquet GEOMETRY column so Spark can read the files, and loaded by the bronze pipeline.
 - Entity-resolution labels come in three layers: exact Overture-to-Foursquare ID links (131,384 in the pilot, 99.9% resolvable), weak supervision (shared phone or website within a short distance, audited against the exact links), and a human-labelled set used only for evaluation.
 **Consequences:** Label supply is rich in Japan, Germany and Italy and thin in Nepal, Iceland, Morocco and Tanzania, which is where the human evaluation set concentrates.
+
+## ADR-011: Silver places: one comparable shape, nearest-destination attribution, mapped categories
+**Date:** 2026-10-14
+**Decision:**
+- `silver_places` stacks Overture (latest release) and Foursquare (latest release) into one schema: normalized name (letters/digits in any script), last 9 phone digits, bare website domain, H3 resolution-9 cell, Odyssey category, closed flag, and for Overture the linked Foursquare place ID from its `sources` (exact matching labels).
+- Each place is attributed to the nearest destination centre among the boxes that contained it (haversine). Kathmandu Valley example: Pharping's 40,013 boxed places resolve to 1,136; Kathmandu keeps 25,734.
+- Categories come from `seeds/category_map.csv`: regex patterns over Overture's taxonomy hierarchy and Foursquare's label path, lowest priority number wins, unmatched = `other`. Overture's newer `taxonomy`/`basic_category` replaced its older `categories` field, so the schema was probed before modelling.
+- Databricks SQL is ANSI-strict: out-of-range array access fails, so all optional array reads use `get(array, index)`.
+**Consequences:** about 6.66M places in silver; tourism groups (eat/stay/see/do) are what the product shows, while `other` remains available to matching.

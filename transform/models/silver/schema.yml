@@ -21,3 +21,16 @@ models:
               arguments:
                 values: [0, 1, 2, 3, 4]
                 quote: false
+
+  - name: silver_places
+    description: "Unified places from Overture and Foursquare, one row per (source, place), matching-ready."
+    columns:
+      - name: place_source_key
+        data_tests: [unique, not_null]
+      - name: h3_r9
+        data_tests: [not_null]
+      - name: odyssey_category
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["eat", "stay", "see", "do", "shop", "other"]
