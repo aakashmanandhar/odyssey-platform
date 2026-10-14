@@ -86,3 +86,17 @@ Short records of significant decisions: context, decision, consequences. Newest 
 - Categories come from `seeds/category_map.csv`: regex patterns over Overture's taxonomy hierarchy and Foursquare's label path, lowest priority number wins, unmatched = `other`. Overture's newer `taxonomy`/`basic_category` replaced its older `categories` field, so the schema was probed before modelling.
 - Databricks SQL is ANSI-strict: out-of-range array access fails, so all optional array reads use `get(array, index)`.
 **Consequences:** about 6.66M places in silver; tourism groups (eat/stay/see/do) are what the product shows, while `other` remains available to matching.
+
+## ADR-012: Entity resolution: two-key blocking, phone-derived labels without leakage, gradient-boosted matcher
+**Date:** 2026-10-14
+**Findings that shaped the design:**
+- Overture records sourced from Foursquare are near-copies (median 0.4 m apart, 99.5% identical names), so these 131k exact links are resolved deterministically and are useless as training labels for independent records.
+- A shared phone alone is not a match: 78% of same-phone pairs are over 1 km apart (chains, hotlines), and close same-phone pairs include shared switchboards (a hotel and its restaurant, doctors in one building).
+- Independently recorded matches lie within 100 m about 94% of the time; only 50% have identical names.
+- Location-only blocking (H3 r10 ring, 150 m) yields about 485M pairs (151M in Japan alone).
+**Decision:**
+- Blocking requires proximity (H3 r10 + ring, <= 150 m) and evidence: a shared rare name trigram (trigrams in more than 0.5% of a country's names are ignored), a shared phone or a shared domain. About 3.16M pairs (150x fewer), built in about 2 minutes.
+- Labels use phones only: a phone unique to one place per source, shared within 100 m, is a match; every other candidate of a matched place is a non-match (one place matches at most one record per source). This replaced "two different phones = non-match", which proved 11% noisy (same business, different numbers).
+- The model (HistGradientBoosting) never sees phone features (enforced by an assert). The split is by destination (60/20/20) and the threshold is precision-first (>= 97% on validation). Tracked in MLflow and registered as `<catalog>.ml.place_matcher` (alias `champion`).
+**Results (unseen destinations, v1):** precision 0.961, recall 0.969, PR-AUC 0.995, recall on different-name matches 0.875.
+**Limitations:** weak labels over-represent businesses with phones; a human-labelled evaluation set is still needed. 115k Overture places have more than one accepted partner, which the next step (one-to-one clustering) resolves.
