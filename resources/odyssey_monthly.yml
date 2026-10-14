@@ -13,7 +13,12 @@ resources:
             notebook_path: ../jobs/ingest_overture.py
             base_parameters:
               catalog: ${var.catalog}
+        - task_key: ingest_foursquare
+          notebook_task:
+            notebook_path: ../jobs/ingest_foursquare.py
+            base_parameters:
+              catalog: ${var.catalog}
         - task_key: bronze_places
-          depends_on: [{task_key: ingest_overture}]
+          depends_on: [{task_key: ingest_overture}, {task_key: ingest_foursquare}]
           pipeline_task:
             pipeline_id: ${resources.pipelines.bronze_places.id}
