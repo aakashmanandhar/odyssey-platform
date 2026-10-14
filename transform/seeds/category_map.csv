@@ -1,0 +1,17 @@
+source,pattern,odyssey_category,priority
+overture,^food_and_drink,eat,20
+overture,^lodging,stay,20
+overture,^cultural_and_historic,see,20
+overture,^geographic_entities,see,30
+overture,^arts_and_entertainment>.*(museum|gallery|exhibit|monument|landmark),see,10
+overture,^arts_and_entertainment,do,20
+overture,^sports_and_recreation,do,20
+overture,^shopping,shop,20
+foursquare,^Dining and Drinking,eat,20
+foursquare,^Travel and Transportation > Lodging,stay,10
+foursquare,^Landmarks and Outdoors,see,20
+foursquare,^Arts and Entertainment > (Museum|Art Gallery|Public Art|Exhibit),see,10
+foursquare,^Arts and Entertainment,do,20
+foursquare,^Sports and Recreation,do,20
+foursquare,^Event,do,20
+foursquare,^Retail,shop,20
