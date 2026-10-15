@@ -109,3 +109,13 @@ Short records of significant decisions: context, decision, consequences. Newest 
 - Survivorship per attribute, deterministic via a weighted `max(named_struct(...))` macro: name and coordinates Foursquare-first; a real category beats `other`; phone and website from any source that has one; closed if any source says permanently closed. Each golden place keeps its sources, record keys, all names, match type and score.
 - The weekly job runs ingest -> dbt (excluding `tag:after_ml`) -> train and score -> dbt (`tag:after_ml`).
 **Result (dev):** 6,661,512 source records -> 5,423,286 golden places; a rebuild kept 100% of IDs.
+
+## ADR-014: Human-labelled evaluation set for entity resolution
+**Date:** 2026-10-15
+**Context:** The matcher's published metrics come from weak, phone-derived labels, which over-represent businesses that list a phone. Portfolio visitors and the Trust page need a number grounded in human judgement.
+**Decision:**
+- `er_eval_sample` draws 300 pairs in five strata: merged matches (90), matches held back by one-to-one clustering (45), near misses scoring >= 0.2 (60), rejected pairs with similar names (45) and Nepal (60). Ordering is by `xxhash64(pair_key)`, so the draw is reproducible.
+- Pairs are labelled blind (model score and stratum hidden) as same / different / not sure in a small private labelling page.
+- Labels are committed as the seed `er_human_labels`, keyed by `pair_key`, carrying the v1 stratum and stratum population. Every model version is re-scored against the same judgements, and metrics are weighted by stratum population to estimate whole-population precision and recall.
+- "Not sure" is reported separately and excluded from precision and recall.
+**Consequences:** 300 labels give roughly ±5-10 point confidence intervals per stratum; the Nepal stratum is reported on its own. The set can grow later (v2) without invalidating v1 labels.
