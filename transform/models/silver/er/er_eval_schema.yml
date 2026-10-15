@@ -1,0 +1,19 @@
+version: 2
+models:
+  - name: er_eval_sample
+    description: >
+      Stratified, deterministic sample of scored Overture-Foursquare pairs for human labelling.
+      Rebuilt weekly; human labels are keyed by pair_key so every model version is evaluated on the same judgements.
+    columns:
+      - name: sample_id
+        data_tests: [unique, not_null]
+      - name: pair_key
+        data_tests: [unique, not_null]
+      - name: stratum
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['A_merged', 'B_held_back', 'C_near_miss', 'D_similar_name_rejected', 'E_nepal']
+      - name: stratum_population
+        data_tests: [not_null]
