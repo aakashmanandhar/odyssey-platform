@@ -1,0 +1,10 @@
+resources:
+  jobs:
+    ingest_images:
+      name: odyssey-ingest-images
+      tasks:
+        - task_key: ingest
+          notebook_task:
+            notebook_path: ../jobs/ingest_images.py
+            base_parameters:
+              catalog: ${var.catalog}

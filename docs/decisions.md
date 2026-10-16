@@ -119,3 +119,14 @@ Short records of significant decisions: context, decision, consequences. Newest 
 - Labels are committed as the seed `er_human_labels`, keyed by `pair_key`, carrying the v1 stratum and stratum population. Every model version is re-scored against the same judgements, and metrics are weighted by stratum population to estimate whole-population precision and recall.
 - "Not sure" is reported separately and excluded from precision and recall.
 **Consequences:** 300 labels give roughly ±5-10 point confidence intervals per stratum; the Nepal stratum is reported on its own. The set can grow later (v2) without invalidating v1 labels.
+
+## ADR-015: Destination photos from Wikimedia Commons, licence-checked in the pipeline
+**Date:** 2026-10-16
+**Context:** The app needs a photo for every destination, legally reusable and credited. Stock APIs were compared: Unsplash (attribution and hotlinking required, 50 requests/hour until approved), Pexels (new API keys paused since October 2026), Pixabay (no permanent hotlinking). Wikimedia Commons needs no key, covers almost every destination and carries the licence with every file.
+**Decision:**
+- Weekly job `ingest_images`: the Wikidata main image (P18) and Wikivoyage banner (P948) for every destination, then Commons imageinfo (author, licence, 1600 px URL) in batches of 50, with 1-second pauses and an identifying User-Agent. Responses are stored raw in `bronze.images_raw`; the job fails without writing if fewer than half the destinations have a photo.
+- dbt parses the latest batch and allows only CC0, public domain, CC BY and CC BY-SA. NonCommercial, NoDerivatives and GFDL files are excluded. Every row carries a ready-made credit line.
+- Gold `dim_destination_image`: one photo per destination and role (main, banner), landscape and larger files preferred; `is_hero` marks the card and header photo.
+- The web app (Phase 5) will cache resized copies on our own server instead of hotlinking Commons.
+**Result (first run):** 206 of 208 destinations have a hero photo and 201 a banner; 6 GFDL files excluded.
+**Later:** photos for individual places (from Wikidata IDs in Overture/Foursquare), with Unsplash as an optional fallback for gaps.
