@@ -37,6 +37,10 @@ resources:
           notebook_task:
             notebook_path: ../jobs/ingest_images.py
             base_parameters: {catalog: "${var.catalog}"}
+        - task_key: ingest_notable_places
+          notebook_task:
+            notebook_path: ../jobs/ingest_notable_places.py
+            base_parameters: {catalog: "${var.catalog}"}
         - task_key: ingest_fx
           notebook_task:
             notebook_path: ../jobs/ingest_fx.py
@@ -49,6 +53,7 @@ resources:
             - {task_key: ingest_visa}
             - {task_key: ingest_advisories}
             - {task_key: ingest_fx}
+            - {task_key: ingest_notable_places}
             - {task_key: ingest_images}
           environment_key: dbt
           dbt_task:

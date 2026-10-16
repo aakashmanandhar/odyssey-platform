@@ -130,3 +130,14 @@ Short records of significant decisions: context, decision, consequences. Newest 
 - The web app (Phase 5) will cache resized copies on our own server instead of hotlinking Commons.
 **Result (first run):** 206 of 208 destinations have a hero photo and 201 a banner; 6 GFDL files excluded.
 **Later:** photos for individual places (from Wikidata IDs in Overture/Foursquare), with Unsplash as an optional fallback for gaps.
+
+## ADR-016: Notable places and their photos from Wikipedia geosearch, matched to golden places
+**Date:** 2026-10-16
+**Context:** Overture and Foursquare do not link landmarks to Wikidata, so famous places had no photo or notability signal. A first design using Wikidata SPARQL (radius search per destination) timed out and was rate-limited in dense cities (25 of 208 destinations after 40 minutes; HTTP 429). Wikidata's query service gives each client about 60 seconds of query time per minute.
+**Decision:**
+- Weekly job `ingest_notable_places` uses Wikipedia's geosearch API instead: the nearest 200 articles per destination (6 km for cities, 10 km otherwise) with coordinates and their type, free lead photo, Wikidata ID, 30-day page views and local-language title; then Commons imageinfo for the photos (batches limited to 50 files and ~7,000 URL characters, because percent-encoded non-Latin names exceed URL limits). Partial failures are tolerated up to 20% of destinations and 5% of Commons batches. About 3-15 minutes per run.
+- Articles about areas (coordinate types city, adm*, country, isle, event, or a title equal to a destination name) are kept in silver but never matched: they matched businesses named after the city ("Pokhara" to "Cafe pokhara").
+- Matching to golden places: H3 resolution 10 with two rings (within 250 m), best character-trigram similarity over all place names against English and local titles, a containment rule with a length-ratio guard, then one-to-one mutual-best selection.
+- Gold `dim_place_wiki`: matched places with Wikipedia title, Wikidata ID, 30-day views and rank in destination, and an openly licensed photo with a credit line where available. Tests: one row per place and per article, valid place, no photo without credit.
+**Result (dev):** 11,000+ articles; 42-85% of eligible articles matched per country; about 6,000 places with a photo (Nepal: Pashupatinath, Swayambhunath, Boudha, the three Durbar Squares, Phewa Lake, all within 0.6-230 m).
+**Later:** unmatched landmark articles (no Overture/Foursquare record) can become new golden places; the human evaluation set can be extended to these matches.
