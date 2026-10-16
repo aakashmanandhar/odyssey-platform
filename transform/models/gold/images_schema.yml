@@ -1,0 +1,21 @@
+version: 2
+models:
+  - name: dim_destination_image
+    description: "Openly licensed destination photos from Wikimedia Commons, one per destination and role, with credit lines."
+    columns:
+      - name: destination_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_destination')
+                field: destination_key
+      - name: role
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['main', 'banner']
+      - name: thumb_url
+        data_tests: [not_null]
+      - name: credit_text
+        data_tests: [not_null]
