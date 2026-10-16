@@ -1,0 +1,17 @@
+version: 2
+models:
+  - name: dim_place_wiki
+    description: "Golden places matched one-to-one to a nearby Wikipedia article: popularity, Wikidata ID and an openly licensed photo with credit."
+    columns:
+      - name: odyssey_place_id
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_place')
+                field: odyssey_place_id
+      - name: wikipedia_page_id
+        data_tests: [unique, not_null]
+      - name: credit_text
+        description: "Present whenever a photo is present."
