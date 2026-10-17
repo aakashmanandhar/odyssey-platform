@@ -153,3 +153,14 @@ Short records of significant decisions: context, decision, consequences. Newest 
 - Editorial overrides: seed `highlight_overrides` (title, action, reason) excludes what rules cannot see (organisations headquartered in landmark buildings, a historic capital, a stadium). Each change is a reviewed one-line commit.
 **Result (dev):** 189 destinations, 2,793 highlights, 91% with photos. Rome: Colosseum, Pantheon, St. Peter's, Trevi Fountain; Kyoto: Kiyomizu-dera, Fushimi Inari, Kinkaku-ji; Kathmandu: Pashupatinath, Swayambhunath, Boudha, the Durbar Squares.
 **Later:** blend in place-level signals (Foursquare popularity when available, review counts) and the season; a `pin` action for editorial picks.
+
+## ADR-018: "When to go" climate from WorldClim (temperature, rain) and NASA POWER (humidity, cloud, sun, wind)
+**Date:** 2026-10-17
+**Context:** NASA POWER's climatology API (2001-2025, one request per destination) has a ~50 km grid. In mountain valleys it was badly wrong: Kathmandu's April high came out at 35.4 C (actual about 28 C) although NASA's grid cell averages 1,269 m, so the error is the model's handling of complex terrain, not elevation alone. Open-Meteo's historical API counts multi-year daily requests as hundreds of calls each, beyond the free daily limit for 208 destinations.
+**Decision:**
+- Temperature (daily high, low) and rainfall: WorldClim 2.1 monthly normals (1970-2000, 2.5 arc-minutes ~4.5 km, interpolated from stations with elevation as a covariate; Fick & Hijmans 2017; free for non-commercial use with citation). Zips are downloaded once into the landing volume; each destination is sampled from the 12 monthly GeoTIFFs with rasterio into `bronze.climate_worldclim_raw`. NASA values are the fallback where WorldClim has no data (points over sea); `temp_rain_source` records which was used.
+- Humidity, cloud, sunshine, wind: NASA POWER (2001-2025), adequate at regional scale.
+- Gold `fact_destination_climate_month`: 12 rows per destination. Comfort score 0-100 = 100 x (0.50 temperature + 0.35 rain + 0.15 cloud): average high 18-28 C ideal (0 at 5 C / 38 C), rain <= 30 mm/month ideal (0 at 300 mm), cloud <= 30% ideal (0 at 85%). The score is absolute (compare destinations); the season label is relative to each destination's best month (best within 10 points, good within 25) so hot places still get a best season. The 3 top months are flagged.
+- Scheduled in the weekly job: the gold model is built there, and the run is cheap once WorldClim is cached.
+**Result:** Kathmandu April high 27.4 C (NASA 35.4 C); monsoon months off-season; Bangkok best December-February (peak score 76 vs Rome 100); southern-hemisphere and high-altitude seasons correct.
+**Limitations:** WorldClim's 1970-2000 period predates recent warming (roughly +1 C); seasonal shape and comparisons are unaffected. Comfort ignores night cold and humidity for now.

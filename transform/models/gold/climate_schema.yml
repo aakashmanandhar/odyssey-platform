@@ -1,0 +1,26 @@
+version: 2
+models:
+  - name: fact_destination_climate_month
+    description: "Monthly climate normals (NASA POWER 2001-2025) per destination with a 0-100 travel comfort score and season label."
+    columns:
+      - name: destination_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_destination')
+                field: destination_key
+      - name: month_num
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+                quote: false
+      - name: comfort_score
+        data_tests: [not_null]
+      - name: season_label
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['best', 'good', 'off-season']
