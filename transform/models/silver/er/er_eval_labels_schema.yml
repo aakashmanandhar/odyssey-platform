@@ -1,0 +1,14 @@
+version: 2
+seeds:
+  - name: er_eval_labels
+    description: "Evaluation sample v1 (300 stratified pairs) labelled by an AI reviewer (Claude) on 2026-10-17; not human-labelled."
+    columns:
+      - name: sample_id
+        data_tests: [unique, not_null]
+      - name: pair_key
+        data_tests: [unique, not_null]
+      - name: label
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['same', 'different', 'unsure']
