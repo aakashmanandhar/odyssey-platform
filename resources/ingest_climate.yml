@@ -1,0 +1,10 @@
+resources:
+  jobs:
+    ingest_climate:
+      name: odyssey-ingest-climate
+      tasks:
+        - task_key: ingest
+          notebook_task:
+            notebook_path: ../jobs/ingest_climate.py
+            base_parameters:
+              catalog: ${var.catalog}

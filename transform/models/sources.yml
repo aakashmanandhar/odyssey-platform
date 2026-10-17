@@ -33,6 +33,12 @@ sources:
         description: "Raw Wikidata (P18/P948) and Wikimedia Commons imageinfo responses for destination photos."
       - name: notable_places_raw
         description: "Raw Wikipedia geosearch responses (articles near destinations) and Commons imageinfo for their photos; refreshed monthly."
+      - name: climate_raw
+        description: "NASA POWER climatology responses: 2001-2025 monthly means per destination; refreshed monthly."
+      - name: climate_worldclim_raw
+        description: "WorldClim 2.1 monthly normals (1970-2000, ~4.5 km) sampled per destination: tmax, tmin (C), prec (mm/month)."
+        freshness: null
+        freshness: null
         freshness: null
       - name: visa_raw
         description: "Passport-index tidy ISO3 CSV, pinned to a commit; one row per batch."
