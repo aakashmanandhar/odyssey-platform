@@ -164,3 +164,14 @@ Short records of significant decisions: context, decision, consequences. Newest 
 - Scheduled in the weekly job: the gold model is built there, and the run is cheap once WorldClim is cached.
 **Result:** Kathmandu April high 27.4 C (NASA 35.4 C); monsoon months off-season; Bangkok best December-February (peak score 76 vs Rome 100); southern-hemisphere and high-altitude seasons correct.
 **Limitations:** WorldClim's 1970-2000 period predates recent warming (roughly +1 C); seasonal shape and comparisons are unaffected. Comfort ignores night cold and humidity for now.
+
+## ADR-019: Entity-resolution evaluation v1, labelled by an AI reviewer
+**Date:** 2026-10-17
+**Context:** The matcher's published metrics (precision 0.961, recall 0.969) come from phone-derived weak labels, which favour businesses that list a phone. ADR-014 defined a 300-pair stratified sample for independent judgement.
+**Decision:**
+- All 300 pairs were labelled same / different / unsure by an AI reviewer (Claude), not by a human, from names, categories, websites and distances, under written rules. Same: one real-world place, including a doctor and their own practice, a faculty and its main building, one name in two scripts, small spelling variants. Different: part vs whole (a hotel's gym or taxi stand, an auditorium in a school, a restaurant in a market or temple area), neighbouring businesses, different people at one address, roads and squares. Unsure when the data cannot settle it (24 pairs, excluded from rates; web searches on the most promising ones were inconclusive). A second review pass changed no labels.
+- Labels are the seed `er_eval_labels` (labeller recorded per row); `er_eval_metrics` computes the figures in the warehouse.
+**Result (v1):** precision of merges 0.897 (95% CI 0.815-0.945, 87 judged pairs); precision of all accepts 0.886 (population-weighted); recall upper bound 0.898. Nepal: 23 of 24 predicted matches correct; 6 of 35 rejections were real matches.
+**Findings:** errors accepted: neighbouring businesses at one address, chain branches. Errors rejected: the same place in two scripts, small spelling variants; the near-miss stratum (score >= 0.2) is 69% true matches, so the 0.47 threshold is likely too strict.
+**Limitations:** AI judgements may differ from a careful local human on a few percent of pairs (chain branches, rebrands); a 30-pair human agreement check is planned. Recall is an upper bound because dissimilar-name rejections (e.g. different scripts) were not sampled.
+**Next:** script-aware name features (transliteration), an "address shared by several businesses" feature, threshold re-tuning against these labels, champion/challenger evaluation of future model versions on the same set.
