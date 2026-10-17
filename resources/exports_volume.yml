@@ -1,0 +1,7 @@
+resources:
+  volumes:
+    exports:
+      catalog_name: ${var.catalog}
+      schema_name: gold
+      name: exports
+      comment: "JSON snapshots of gold data for the static Odyssey web app (one folder per export run + LATEST pointer)."

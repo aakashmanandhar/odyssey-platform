@@ -80,3 +80,8 @@ resources:
             warehouse_id: ${var.warehouse_id}
             commands:
               - "dbt build --select tag:after_ml"
+        - task_key: export_snapshot
+          depends_on: [{task_key: dbt_build_places}]
+          notebook_task:
+            notebook_path: ../jobs/export_snapshot.py
+            base_parameters: {catalog: "${var.catalog}"}
