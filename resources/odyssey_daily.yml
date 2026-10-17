@@ -32,3 +32,8 @@ resources:
             commands:
               - "dbt build --select source:bronze.advisories_raw+ source:bronze.fx_raw+"
               - "dbt source freshness --select source:bronze.advisories_raw source:bronze.fx_raw"
+        - task_key: export_snapshot
+          depends_on: [{task_key: dbt_build}]
+          notebook_task:
+            notebook_path: ../jobs/export_snapshot.py
+            base_parameters: {catalog: "${var.catalog}"}

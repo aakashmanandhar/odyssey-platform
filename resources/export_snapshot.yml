@@ -1,0 +1,10 @@
+resources:
+  jobs:
+    export_snapshot:
+      name: odyssey-export-snapshot
+      tasks:
+        - task_key: export
+          notebook_task:
+            notebook_path: ../jobs/export_snapshot.py
+            base_parameters:
+              catalog: ${var.catalog}
