@@ -1,0 +1,16 @@
+version: 2
+models:
+  - name: mart_destination_highlights
+    description: "Top 30 sights and activities per destination, ranked by Wikipedia popularity with photo and place-confirmation boosts."
+    columns:
+      - name: destination_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_destination')
+                field: destination_key
+      - name: highlight_rank
+        data_tests: [not_null]
+      - name: title
+        data_tests: [not_null]

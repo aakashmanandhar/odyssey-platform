@@ -8,6 +8,10 @@ resources:
       email_notifications:
         on_failure: ["${workspace.current_user.userName}"]
       tasks:
+        - task_key: ingest_notable_places
+          notebook_task:
+            notebook_path: ../jobs/ingest_notable_places.py
+            base_parameters: {catalog: "${var.catalog}"}
         - task_key: ingest_overture
           notebook_task:
             notebook_path: ../jobs/ingest_overture.py

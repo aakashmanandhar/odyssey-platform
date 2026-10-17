@@ -141,3 +141,15 @@ Short records of significant decisions: context, decision, consequences. Newest 
 - Gold `dim_place_wiki`: matched places with Wikipedia title, Wikidata ID, 30-day views and rank in destination, and an openly licensed photo with a credit line where available. Tests: one row per place and per article, valid place, no photo without credit.
 **Result (dev):** 11,000+ articles; 42-85% of eligible articles matched per country; about 6,000 places with a photo (Nepal: Pashupatinath, Swayambhunath, Boudha, the three Durbar Squares, Phewa Lake, all within 0.6-230 m).
 **Later:** unmatched landmark articles (no Overture/Foursquare record) can become new golden places; the human evaluation set can be extended to these matches.
+
+## ADR-017: Destination highlights ("must-see") from Wikipedia popularity, with grid search and editorial overrides
+**Date:** 2026-10-17
+**Context:** A first version searched the 200 articles nearest each destination centre. In dense cities that covers about 1 km (Rome's list started with Trajan's Column; the Colosseum, Pantheon and Trevi Fountain were missing).
+**Decision:**
+- Ingest: cities are searched on a 19-point grid of 3 km circles (500 articles each), other destinations with one 10 km circle; article details are fetched once per article in batches of 50. About 30-45 minutes, so the job moved from the weekly to the monthly pipeline.
+- `mart_destination_highlights`: top 30 per destination. Score = log10(1 + 30-day page views) + 0.3 with a usable photo + 0.2 when both place sources confirm the place. Built from all eligible articles, so famous places missing from Overture/Foursquare still appear (`is_in_place_index` = false). An article is listed under every destination whose search area found it (Kathmandu, Lalitpur and Bhaktapur overlap).
+- Eligibility: no area articles; no railway stations, education, airports; whole-word title rules for institutions and events; unmatched articles must be a typed physical feature; matched places must be sights/activities or landmarks.
+- Matching rule added: a landmark article never matches a restaurant, hotel or shop (Fushimi Inari had matched a cafe at its gate).
+- Editorial overrides: seed `highlight_overrides` (title, action, reason) excludes what rules cannot see (organisations headquartered in landmark buildings, a historic capital, a stadium). Each change is a reviewed one-line commit.
+**Result (dev):** 189 destinations, 2,793 highlights, 91% with photos. Rome: Colosseum, Pantheon, St. Peter's, Trevi Fountain; Kyoto: Kiyomizu-dera, Fushimi Inari, Kinkaku-ji; Kathmandu: Pashupatinath, Swayambhunath, Boudha, the Durbar Squares.
+**Later:** blend in place-level signals (Foursquare popularity when available, review counts) and the season; a `pin` action for editorial picks.
