@@ -1,26 +1,52 @@
 #!/usr/bin/env bash
-# Wait for the next merge to main, then for that exact commit's deploy run; then sync local main.
-# Usage: ./scripts/wait-for-prod.sh   (start it before or after clicking merge)
-set -euo pipefail
-API=https://api.github.com/repos/aakashmanandhar/odyssey-platform/actions
+# Wait for the next merge to main, then for that exact commit's deploy run; print the result and sync main.
+# Uses a GitHub token when available (gh CLI or $GITHUB_TOKEN): 5,000 API calls/hour instead of 60.
+set -u
+REPO="aakashmanandhar/odyssey-platform"
+API="https://api.github.com/repos/$REPO"
+TOKEN="${GITHUB_TOKEN:-$(gh auth token 2>/dev/null || true)}"
+AUTH=(); [ -n "$TOKEN" ] && AUTH=(-H "Authorization: Bearer $TOKEN")
+[ -n "$TOKEN" ] && echo "Using an authenticated GitHub API (5,000 calls/hour)." || echo "No GitHub token found: using the anonymous API (60 calls/hour)."
+
+get() {  # $1 = path, $2 = python expression on d; prints the value or nothing on any error
+  curl -s "${AUTH[@]}" "$API/$1" | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    if 'message' in d and 'rate limit' in d['message'].lower(): print('RATE_LIMITED'); sys.exit()
+    v = $2
+    print(v if v is not None else '')
+except Exception: pass"
+}
+
 git fetch -q origin main
-OLD=$(git rev-parse origin/main)
-echo "main is at ${OLD:0:7}. Waiting for the merge..."
+START=$(git rev-parse origin/main)
+echo "main is at ${START:0:7}. Waiting for the merge..."
 while true; do
-  git fetch -q origin main
-  NEW=$(git rev-parse origin/main)
-  [ "$NEW" != "$OLD" ] && break
-  sleep 15
+  git fetch -q origin main; SHA=$(git rev-parse origin/main)
+  [ "$SHA" != "$START" ] && break
+  sleep 30
 done
-echo "main moved to ${NEW:0:7}. Waiting for its deploy run to start..."
-until RUN=$(curl -s "$API/runs?head_sha=$NEW&event=push" | python3 -c "import sys,json; r=json.load(sys.stdin)['workflow_runs']; print(r[0]['id']) if r else sys.exit(1)"); do
-  sleep 10
+echo "main moved to ${SHA:0:7}. Waiting for its deploy run to start..."
+
+RUN=""
+while [ -z "$RUN" ] || [ "$RUN" = "RATE_LIMITED" ]; do
+  RUN=$(get "actions/runs?head_sha=$SHA&event=push" "d['workflow_runs'][0]['id'] if d.get('workflow_runs') else None")
+  [ "$RUN" = "RATE_LIMITED" ] && echo "GitHub rate limit reached; retrying in 5 minutes..." && sleep 300 && continue
+  [ -z "$RUN" ] && sleep 30
 done
-until [ "$(curl -s "$API/runs/$RUN" | python3 -c "import sys,json; print(json.load(sys.stdin)['status'])")" = "completed" ]; do
-  echo "deploy-prod running (run $RUN)..."
-  sleep 20
+
+while true; do
+  STATUS=$(get "actions/runs/$RUN" "d.get('status')")
+  case "$STATUS" in
+    completed) break ;;
+    RATE_LIMITED) echo "GitHub rate limit reached; retrying in 5 minutes..."; sleep 300 ;;
+    "") echo "No answer from GitHub (network or API error); retrying..."; sleep 60 ;;
+    *) echo "deploy-prod $STATUS (run $RUN)..."; sleep 60 ;;
+  esac
 done
-RESULT=$(curl -s "$API/runs/$RUN" | python3 -c "import sys,json; print(json.load(sys.stdin)['conclusion'])")
-echo "RESULT: $RESULT for ${NEW:0:7}"
-git checkout -q main && git pull -q && git fetch -q --prune
+
+RESULT=$(get "actions/runs/$RUN" "d.get('conclusion')")
+echo "RESULT: $RESULT for ${SHA:0:7}"
+git checkout -q main && git pull -q
 [ "$RESULT" = "success" ]

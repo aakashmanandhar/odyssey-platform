@@ -21,4 +21,4 @@ select
         or lower(trim(regexp_replace(r.title, '\\s*\\([^)]*\\)$', ''))) in (select n from destination_names)
                                                                                 as is_area_article
 from ranked r
-qualify row_number() over (partition by r.page_id order by r.views_rank_in_destination, r.destination_qid) = 1
+qualify row_number() over (partition by r.page_id order by r.dist_m, r.destination_qid) = 1
