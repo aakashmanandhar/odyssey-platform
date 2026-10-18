@@ -12,7 +12,7 @@ export default function App() {
   return (
     <Layout>
       <AnimatePresence mode="wait" initial={false}>
-        <motion.div key={location.pathname}
+        <motion.div key={location.pathname} className="route"
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
           transition={{ duration: 0.28, ease: [0.2, 0.7, 0.2, 1] }}>
           <Routes location={location}>
