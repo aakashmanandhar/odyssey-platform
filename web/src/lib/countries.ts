@@ -17,3 +17,8 @@ export function guessPassport(available: string[]): string {
 export function savePassport(iso3: string) {
   try { localStorage.setItem("odyssey-passport", iso3); } catch { /* storage unavailable */ }
 }
+// Flag emoji from the ISO alpha-2 code (regional indicator letters); empty when the code is unknown.
+export function flag(iso3: string) {
+  const a2 = countries.alpha3ToAlpha2(iso3);
+  return a2 ? String.fromCodePoint(...[...a2.toUpperCase()].map((ch) => 0x1f1e6 + ch.charCodeAt(0) - 65)) : "";
+}

@@ -12,7 +12,7 @@ import { ClimateChart, season } from "../components/ClimateChart";
 import { ComfortGauge } from "../components/ComfortGauge";
 import { Tabs } from "../components/Tabs";
 import { Carousel } from "../components/Carousel";
-import { DestinationCard } from "../components/DestinationCard";
+import { DestTile } from "../components/DestTile";
 import { LoadError, Loading } from "../components/State";
 import { Soon } from "./Soon";
 
@@ -55,6 +55,17 @@ function Planner({ d, month, setMonth }: { d: DestinationFile; month: number; se
           <span className={`pill ${s.cls}`}>{s.label}</span>
           <AnimatePresence mode="wait"><motion.p key={month} className="verdict" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>{verdict(m, d.destination.name)}</motion.p></AnimatePresence>
         </div>
+      </div>
+      <div className="pl-year" role="group" aria-label="Comfort by month">
+        {MONTHS.map((lbl, i) => {
+          const mm = ms.find((x) => x.month_num === i + 1), v = mm?.comfort_score ?? 0;
+          return (
+            <button key={lbl} className={`${month === i + 1 ? "on " : ""}${season(mm?.season_label ?? null).cls}`} onClick={() => setMonth(i + 1)}
+              aria-label={`${MONTHS_LONG[i]}: comfort ${mm?.comfort_score ?? "unknown"}`} title={`${MONTHS_LONG[i]} · comfort ${mm?.comfort_score ?? "–"}`}>
+              <motion.i initial={{ height: 0 }} animate={{ height: `${Math.max(8, v)}%` }} transition={{ delay: i * 0.03, duration: 0.5, ease: [0.2, 0.7, 0.2, 1] }} />
+            </button>
+          );
+        })}
       </div>
       <div className="pstats">
         <div><span>Day</span><b>{m.temp_max_c != null ? `${Math.round(m.temp_max_c)}°` : "–"}</b></div>
@@ -105,10 +116,10 @@ function Sights({ d }: { d: DestinationFile }) {
   const maxViews = Math.max(1, ...d.highlights.map((h) => h.views_30d ?? 0));
   if (!d.highlights.length) return <p className="muted empty">No verified sights for {d.destination.name} yet. Our filters leave a place empty rather than list stadiums or offices.</p>;
   return (
-    <>
+    <div className="sights-fill">
       {groups.length > 2 && <div className="filters">{groups.map((x) => <button key={x.key} className={g === x.key ? "on" : ""} onClick={() => setG(x.key)}>{x.label}<em>{x.n}</em></button>)}</div>}
-      <Carousel label="Top sights">{list.map((h) => <HighlightCard key={h.title} h={h} maxViews={maxViews} dest={d.destination.name} />)}</Carousel>
-    </>
+      <div className="fill-car"><Carousel label="Top sights">{list.map((h) => <HighlightCard key={h.title} h={h} maxViews={maxViews} dest={d.destination.name} />)}</Carousel></div>
+    </div>
   );
 }
 
@@ -181,16 +192,16 @@ export default function Destination() {
 
       <section className="tabpanel">
         <AnimatePresence mode="wait">
-          <motion.div key={activeTab} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.22 }}>
+          <motion.div key={activeTab} className="tabfill" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.22 }}>
             {activeTab === "when" && d.climate && (
-              <div className="panel">
+              <div className="panel fill">
                 <ClimateChart months={d.climate.months} month={month} onMonth={setMonth} />
                 <p className="source">Temperature and rain: WorldClim 2.1 (1970–2000). Humidity and cloud: NASA POWER (2001–2025). Comfort = 100 × (0.5 temperature + 0.35 dryness + 0.15 clear skies).</p>
               </div>
             )}
             {activeTab === "sights" && <Sights d={d} />}
-            {activeTab === "around" && <div className="panel"><Around d={d} /></div>}
-            {activeTab === "nearby" && <Carousel label={`More in ${d.country.name}`}>{related.map((r) => <DestinationCard key={r.key} d={r} country={d.country.name} month={month} />)}</Carousel>}
+            {activeTab === "around" && <div className="panel fill"><Around d={d} /></div>}
+            {activeTab === "nearby" && <div className="tile-grid">{related.map((r, i) => <DestTile key={r.key} d={r} i={i} month={month} />)}</div>}
           </motion.div>
         </AnimatePresence>
       </section>

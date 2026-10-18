@@ -2,16 +2,20 @@ import { Link, useParams } from "react-router-dom";
 import { useJSON } from "../lib/data";
 import type { IndexFile } from "../lib/types";
 import { Img } from "../components/Img";
+import { OdysseyMark } from "../components/Logo";
 
 // Temporary pages so every link works; each is replaced in step 5.4.
 export function Soon({ title, note }: { title: string; note: string }) {
   return (
-    <section className="wrap soon">
-      <p className="eyebrow">Coming next</p>
-      <h1>{title}</h1>
-      <p className="muted">{note}</p>
-      <Link className="btn" to="/">Back to home</Link>
-    </section>
+    <div className="page-fit soon-fit">
+      <section className="panel soon-card">
+        <span className="soon-ic"><OdysseyMark size={30} /></span>
+        <p className="eyebrow">Coming next</p>
+        <h1>{title}</h1>
+        <p className="muted">{note}</p>
+        <Link className="btn" to="/">Back to home</Link>
+      </section>
+    </div>
   );
 }
 

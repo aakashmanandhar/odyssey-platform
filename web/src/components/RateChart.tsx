@@ -1,20 +1,23 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { useWidth } from "../lib/useWidth";
+import { fitPlot, useSize } from "../lib/useSize";
 
-// 120-day exchange-rate line (2px line, 10% area wash, crosshair + readout). Field names are detected, not assumed.
+// Field names in the rate series are detected, not assumed (date-like key, numeric rate key).
+export function ratePoints(series: Record<string, unknown>[]) {
+  if (!series.length) return [];
+  const keys = Object.keys(series[0]);
+  const dk = keys.find((k) => /date|day/i.test(k)), vk = keys.find((k) => /rate/i.test(k) && typeof series[0][k] === "number");
+  if (!dk || !vk) return [];
+  return series.map((r) => ({ d: String(r[dk]), v: Number(r[vk]) })).filter((p) => isFinite(p.v)).sort((a, b) => a.d.localeCompare(b.d));
+}
+
+// 120-day exchange-rate line (2px line, 10% area wash, crosshair + readout).
 export function RateChart({ series, currency }: { series: Record<string, unknown>[]; currency: string }) {
-  const [ref, W] = useWidth<HTMLDivElement>();
+  const [ref, W, CH] = useSize<HTMLDivElement>();
   const [hover, setHover] = useState<number | null>(null);
-  const pts = useMemo(() => {
-    if (!series.length) return [];
-    const keys = Object.keys(series[0]);
-    const dk = keys.find((k) => /date|day/i.test(k)), vk = keys.find((k) => /rate/i.test(k) && typeof series[0][k] === "number");
-    if (!dk || !vk) return [];
-    return series.map((r) => ({ d: String(r[dk]), v: Number(r[vk]) })).filter((p) => isFinite(p.v)).sort((a, b) => a.d.localeCompare(b.d));
-  }, [series]);
+  const pts = useMemo(() => ratePoints(series), [series]);
   if (pts.length < 5) return null;
-  const L = 52, R = 10, TOP = 10, P = 150, XL = 22, H = TOP + P + XL;
+  const L = 52, R = 10, TOP = 10, XL = 22, P = fitPlot(CH, TOP + XL, 150), H = TOP + P + XL;
   const lo = Math.min(...pts.map((p) => p.v)), hi = Math.max(...pts.map((p) => p.v)), pad = (hi - lo) * 0.15 || hi * 0.01;
   const y0 = lo - pad, y1 = hi + pad;
   const x = (i: number) => L + (i / (pts.length - 1)) * Math.max(0, W - L - R);
