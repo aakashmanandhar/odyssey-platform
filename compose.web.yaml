@@ -1,0 +1,11 @@
+# Odyssey web app on the VPS: docker compose -p odyssey -f compose.web.yaml up -d --build
+services:
+  web:
+    build: ./web
+    image: odyssey-web
+    container_name: odyssey-web
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8022:80"
+    volumes:
+      - /srv/odyssey:/srv/odyssey:ro
