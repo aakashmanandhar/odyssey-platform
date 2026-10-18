@@ -22,23 +22,29 @@ export default function Countries() {
   if (!data) return <Loading label="Loading countries" />;
   const list = [...data.countries].sort((a, b) => a.name.localeCompare(b.name));
   return (
-    <section className="wrap sec">
-      <div className="sec-hd"><p className="eyebrow">Countries</p><h2>{list.length} countries, briefed</h2>
-        <p className="muted">Safety advice, money, visas, holidays and tourism trends for each country, updated automatically.</p></div>
-      <div className="grid ctry-grid">
-        {list.map((c, i) => (
-          <motion.article key={c.key} className="card" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
-            {c.cover ? <Img photo={c.cover} size={800} alt={c.name} /> : <div className="ph failed"><div className="ph-fallback">{c.name[0]}</div></div>}
-            <div className="card-body">
-              <div className="sub">{c.region}</div>
-              <h3>{c.name}</h3>
-              {(() => { const b = badge(c.advisory_level, c.advisory_label); return <StatusBadge tone={b.tone} label={b.text} />; })()}
-              <p className="best">{c.destinations ?? 0} destinations · {c.currency === "EUR" ? "Euro" : `1 € = ${(c.rate_per_eur ?? 0).toLocaleString("en-GB", { maximumFractionDigits: 2 })} ${c.currency}`}</p>
-            </div>
-            <Link className="stretched" to={`/c/${c.key}`} aria-label={`Open ${c.name}`} />
-          </motion.article>
-        ))}
+    <div className="page-fit">
+      <div className="pg-head">
+        <div><p className="eyebrow">Countries</p><h1>{list.length} countries, briefed</h1></div>
+        <p className="muted">Safety advice, money, visas, holidays and tourism trends, updated automatically.</p>
       </div>
-    </section>
+      <div className="ctry-bento">
+        {list.map((c, i) => {
+          const b = badge(c.advisory_level, c.advisory_label);
+          return (
+            <motion.div key={c.key} initial={{ opacity: 0, y: 16, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ delay: i * 0.035, duration: 0.4 }}>
+              <Link to={`/c/${c.key}`} className="cbento">
+                {c.cover && <Img photo={c.cover} size={800} alt="" showCredit={false} />}
+                <div className="cbento-in">
+                  <span className="reg">{c.region}</span>
+                  <b>{c.name}</b>
+                  <div className="cb-row"><StatusBadge tone={b.tone} label={b.text} onPhoto /></div>
+                  <span className="meta">{c.destinations ?? 0} destinations · {c.currency === "EUR" ? "Euro" : `1 € = ${(c.rate_per_eur ?? 0).toLocaleString("en-GB", { maximumFractionDigits: 2 })} ${c.currency}`}</span>
+                </div>
+              </Link>
+            </motion.div>
+          );
+        })}
+      </div>
+    </div>
   );
 }

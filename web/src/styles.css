@@ -558,3 +558,34 @@ body { overflow-x: hidden; }
 .ms i.b { background: var(--c-best); }
 .ms i.b.cur { background: var(--accent); }
 .ms i.cur { box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--accent); }
+
+/* ---------- 5.6f: fit-to-screen country pages ---------- */
+.cpage .entry { gap: 12px; overflow-y: auto; scrollbar-width: thin; }
+.cpage .entry .visa { gap: 14px; }
+.cpage .entry .visa-result { padding: 10px 12px; }
+.cpage .entry .source { margin-top: 4px; }
+.glance { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr); gap: 14px; align-items: start; }
+.facts.tight { margin: 0; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.facts.tight .fact { padding: 12px 14px; }
+.facts.tight .fact .v { font-size: 22px; }
+.adv-card { border-radius: 22px; }
+.hol-panel { max-height: 100%; overflow-y: auto; scrollbar-width: thin; }
+@media (max-width: 960px) { .glance { grid-template-columns: 1fr; } }
+
+.pg-head { display: flex; justify-content: space-between; align-items: end; gap: 16px; flex-wrap: wrap; }
+.pg-head h1 { font-size: clamp(28px, 3.2vw, 44px); }
+.pg-head .muted { max-width: 46ch; font-size: 14px; }
+.ctry-bento { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.ctry-bento > div { min-height: 0; }
+.cbento { position: relative; isolation: isolate; display: block; height: 100%; min-height: 150px; border-radius: 20px; overflow: hidden; color: #fff; border: 1px solid var(--line); }
+.cbento .ph { position: absolute; inset: 0; z-index: -2; }
+.cbento .ph img { transition: transform .8s cubic-bezier(.2,.7,.2,1), opacity .7s; }
+.cbento:hover .ph.loaded img { transform: scale(1.07); }
+.cbento::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(6,10,12,.05) 25%, rgba(6,10,12,.82)); }
+.cbento-in { position: absolute; left: 16px; right: 16px; bottom: 14px; display: grid; gap: 6px; }
+.cbento .reg { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; opacity: .8; }
+.cbento b { font: 700 clamp(20px, 1.8vw, 26px)/1.1 var(--font-display); }
+.cbento .meta { font-size: 12.5px; opacity: .85; }
+.cb-row .status { font-size: 12px; padding: 4px 9px; }
+@media (max-width: 1100px) { .ctry-bento { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 900px), (max-height: 640px) { .ctry-bento { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); grid-template-rows: none; } .cbento { height: 190px; } }
