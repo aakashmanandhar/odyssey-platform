@@ -1,0 +1,7 @@
+version: 2
+models:
+  - name: silver_wikidata_place_class
+    description: "Per Wikidata item behind a notable place: policy flags from seed wikidata_class_rules and the item's countries (ADR-020)."
+    columns:
+      - name: wikidata_id
+        tests: [not_null, unique]

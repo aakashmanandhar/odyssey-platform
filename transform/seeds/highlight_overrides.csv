@@ -5,3 +5,14 @@ Jesuits,exclude,Organisation (headquarters building) - not a visitor sight
 Heian-kyō,exclude,Historic capital city - not a single place to visit
 Dasharath Rangasala,exclude,Football stadium - not a visitor sight
 Lake Texcoco,exclude,"Historic lake, almost entirely drained; not a visitable sight"
+Boyztown,exclude,Red-light area - not a family travel sight
+Sunee Plaza,exclude,Red-light area - not a family travel sight
+The Last Supper,keep,Famous sight Wikidata types only as a painting
+Galleria Vittorio Emanuele II,keep,Landmark arcade Wikidata types only as a shopping centre
+Bou Inania Madrasa,keep,Historic madrasa Wikidata types only as a school
+Dōtonbori,keep,Famous district Wikidata types only as an area
+Mellah of Fez,keep,Historic quarter Wikidata types only as a settlement
+Silfra,keep,Famous fissure Wikidata types only as a sports venue
+Chouara Tannery,keep,Famous tannery Wikidata types only as a business
+Korat Chatchai Hall,exclude,Indoor sports arena (unclassified in Wikidata)
+Nakhon Ratchasima Sports Complex,exclude,Sports complex (unclassified in Wikidata)

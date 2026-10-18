@@ -35,6 +35,10 @@ sources:
         description: "Raw Wikipedia geosearch responses (articles near destinations) and Commons imageinfo for their photos; refreshed monthly."
         config:
           freshness: null
+      - name: wikidata_types_raw
+        description: "Raw Wikidata SPARQL responses: instance-of, country and superclass chains for notable places (ADR-020)."
+        config:
+          freshness: null
       - name: climate_raw
         description: "NASA POWER climatology responses: 2001-2025 monthly means per destination; refreshed monthly."
         config:

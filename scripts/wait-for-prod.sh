@@ -46,7 +46,11 @@ while true; do
   esac
 done
 
-RESULT=$(get "actions/runs/$RUN" "d.get('conclusion')")
+for _ in 1 2 3 4 5 6 7 8 9 10; do
+  RESULT=$(get "actions/runs/$RUN" "d.get('conclusion') or ''")
+  [ -n "$RESULT" ] && [ "$RESULT" != "None" ] && break
+  sleep 6
+done
 echo "RESULT: $RESULT for ${SHA:0:7}"
 git checkout -q main && git pull -q
 [ "$RESULT" = "success" ]
