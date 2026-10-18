@@ -4,12 +4,14 @@
 Layout under DATA_ROOT:
   releases/<run_id>/...   verified snapshot files (last 3 kept)
   current -> releases/<run_id>   (symlink, swapped atomically)
-  images/<id>-1600.<ext>, images/<id>-800.<ext>   photo cache shared by all releases
+  images/<id>-1600.webp, images/<id>-800.webp     photo cache, re-encoded to WebP, shared by all releases
   status.json             last sync result (read by the web app's Trust page)
 Environment: DATABRICKS_HOST, DATABRICKS_TOKEN, ODYSSEY_CATALOG (default odyssey), DATA_ROOT (default /srv/odyssey).
-Standard library only. Exit code 0 = up to date or published; 1 = failed (site keeps serving the previous release).
+Needs Pillow (Ubuntu: apt install python3-pil). Exit code 0 = up to date or published; 1 = failed (site keeps serving the previous release).
 """
 import argparse
+import glob
+import io
 import datetime as dt
 import hashlib
 import json
@@ -20,6 +22,12 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+
+try:
+    from PIL import Image, ImageOps
+    Image.MAX_IMAGE_PIXELS = 250_000_000  # large Commons originals are legitimate
+except ImportError:
+    Image = ImageOps = None
 
 USER_AGENT = "OdysseySync/0.1 (https://aakashmanandhar.tech/odyssey)"
 HOST = os.environ.get("DATABRICKS_HOST", "").rstrip("/")
@@ -75,6 +83,55 @@ def collect_images(obj, found):
             collect_images(v, found)
 
 
+def thumb_url(src, width):
+    """Wikimedia's resized rendition of an original upload, or None if src is already a thumbnail."""
+    u = urllib.parse.urlparse(src)
+    if u.netloc != "upload.wikimedia.org" or "/thumb/" in u.path:
+        return None
+    parts = u.path.split("/")  # ['', 'wikipedia', 'commons', 'c', 'c8', 'File.jpg']
+    if len(parts) < 6 or parts[-1].lower().endswith((".tif", ".tiff")):
+        return None
+    name = parts[-1]
+    suffix = ".png" if name.lower().endswith(".svg") else ""
+    return f"{u.scheme}://{u.netloc}{'/'.join(parts[:3])}/thumb/{'/'.join(parts[3:])}/{width}px-{name}{suffix}"
+
+
+def render(img_dir, img_id, src):
+    """Write <id>-1600.webp and <id>-800.webp. Source: an already cached file, else the 1600px thumbnail, else the original."""
+    out = {w: f"{img_dir}/{img_id}-{w}.webp" for w in (1600, 800)}
+    if all(os.path.exists(p) for p in out.values()):
+        return "cached"
+    legacy = sorted(p for p in glob.glob(f"{img_dir}/{img_id}-*") if not p.endswith((".webp", ".tmp")))
+    big = [p for p in legacy if os.path.basename(p).startswith(f"{img_id}-1600.")]
+    if big:
+        with open(big[0], "rb") as f:
+            data = f.read()
+    else:
+        data = None
+        t = thumb_url(src, 1600)
+        if t:
+            try:
+                data = http(t, attempts=2, timeout=60)
+            except Exception:
+                data = None
+        if data is None:
+            data = http(src, attempts=3, timeout=90)
+        time.sleep(0.2)
+    im = Image.open(io.BytesIO(data))
+    if im.format == "JPEG":
+        im.draft("RGB", (3200, 3200))  # decode large JPEGs at reduced size: much faster, same result
+    im = ImageOps.exif_transpose(im)
+    alpha = im.mode in ("RGBA", "LA") or (im.mode == "P" and "transparency" in im.info)
+    im = im.convert("RGBA" if alpha else "RGB")
+    for w, path in out.items():
+        r = im if im.width <= w else im.resize((w, max(1, round(im.height * w / im.width))), Image.LANCZOS)
+        r.save(path + ".tmp", "WEBP", quality=80, method=4)
+        os.replace(path + ".tmp", path)
+    for p in legacy:
+        os.remove(p)
+    return "new"
+
+
 def cache_images(release_dir, max_images=None):
     found = {}
     for dirpath, _, files in os.walk(release_dir):
@@ -88,26 +145,12 @@ def cache_images(release_dir, max_images=None):
     for n, (img_id, src) in enumerate(sorted(found.items())):
         if max_images is not None and n >= max_images:
             break
-        ext = os.path.splitext(urllib.parse.urlparse(src).path)[1].lower() or ".jpg"
-        for size, url in (("1600", src), ("800", src.replace("/1600px-", "/800px-"))):
-            target = f"{img_dir}/{img_id}-{size}{ext}"
-            if os.path.exists(target):
-                continue
-            try:
-                data = http(url, attempts=3, timeout=60)
-            except Exception:
-                if size == "800":   # no 800px rendition: reuse the 1600px file
-                    big = f"{img_dir}/{img_id}-1600{ext}"
-                    if os.path.exists(big):
-                        shutil.copyfile(big, target)
-                        continue
-                failed += 1
-                continue
-            with open(target + ".tmp", "wb") as f:
-                f.write(data)
-            os.replace(target + ".tmp", target)
-            new += 1
-            time.sleep(0.2)
+        try:
+            new += render(img_dir, img_id, src) == "new"
+        except Exception as e:
+            failed += 1
+            if failed <= 5:
+                log(f"photo {img_id} failed: {type(e).__name__}: {str(e)[:120]}")
     return len(found), new, failed
 
 
@@ -118,6 +161,9 @@ def main():
     args = ap.parse_args()
     if not HOST or not TOKEN:
         log("ERROR: DATABRICKS_HOST and DATABRICKS_TOKEN must be set")
+        return 1
+    if Image is None:
+        log("ERROR: Pillow is not installed (Ubuntu: apt install python3-pil)")
         return 1
     try:
         latest = volume_file("LATEST").decode().strip()

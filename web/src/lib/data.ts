@@ -33,15 +33,5 @@ export function useJSON<T>(file: string | null) {
   return state;
 }
 
-// Same extension rule as serving/sync_snapshot.py (os.path.splitext of the URL path, lower-cased, default .jpg)
-export function extOf(src: string): string {
-  try {
-    const path = new URL(src).pathname;
-    const last = path.slice(path.lastIndexOf("/") + 1);
-    const i = last.lastIndexOf(".");
-    return i > 0 ? last.slice(i).toLowerCase() : ".jpg";
-  } catch {
-    return ".jpg";
-  }
-}
-export const localImg = (p: Photo, size: 800 | 1600) => `${BASE}img/${p.id}-${size}${extOf(p.src)}`;
+// Photos are cached on the server as WebP at two widths (serving/sync_snapshot.py): <id>-800.webp and <id>-1600.webp
+export const localImg = (p: Photo, size: 800 | 1600) => `${BASE}img/${p.id}-${size}.webp`;
