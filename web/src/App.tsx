@@ -2,7 +2,9 @@ import { Route, Routes, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Layout } from "./components/Layout";
 import Home from "./pages/Home";
-import { CountrySoon, Soon } from "./pages/Soon";
+import { Soon } from "./pages/Soon";
+import Country from "./pages/Country";
+import Countries from "./pages/Countries";
 import Destination from "./pages/Destination";
 
 export default function App() {
@@ -16,11 +18,11 @@ export default function App() {
           <Routes location={location}>
             <Route path="/" element={<Home />} />
             <Route path="/explore" element={<Soon title="Explore all destinations" note="Filter all 208 destinations by month, country and type. Arrives in step 5.4." />} />
-            <Route path="/countries" element={<Soon title="Countries" note="Briefings for all 12 countries. Arrives in step 5.4." />} />
+            <Route path="/countries" element={<Countries />} />
             <Route path="/compare" element={<Soon title="Compare destinations" note="Two or three places side by side, climate curves overlaid. Arrives in step 5.4." />} />
             <Route path="/about" element={<Soon title="How it's built" note="Data sources, freshness and model accuracy. Arrives in step 5.4." />} />
             <Route path="/d/:key" element={<Destination />} />
-            <Route path="/c/:key" element={<CountrySoon />} />
+            <Route path="/c/:key" element={<Country />} />
             <Route path="*" element={<Soon title="Page not found" note="That address doesn't exist. Try search, or head back home." />} />
           </Routes>
         </motion.div>

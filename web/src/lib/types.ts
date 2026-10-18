@@ -38,3 +38,19 @@ export interface DestinationFile {
   climate: { months: ClimateMonth[]; best_months: MonthRef[]; top_months: MonthRef[]; peak_comfort: number | null } | null;
   places_by_category: Record<string, number> | null;
 }
+export interface CountryFile {
+  country: { country_key: string; iso2?: string; iso3?: string; country_name: string; region?: string; capital?: string;
+             population?: number | null; area_km2?: number | null; currency_codes?: string[]; official_languages?: string[]; lat?: number; lon?: number };
+  profile: { population?: number | null; population_year?: number | null; destinations?: number; cities?: number;
+             primary_currency?: string | null; rate_per_eur?: number | null; rate_basis?: string | null; rate_as_of?: string | null;
+             price_level_ratio?: number | null; price_level_year?: number | null; arrivals_2019?: number | null } | null;
+  advisory: { issuer?: string; advisory_level?: number | null; advisory_label?: string | null; warning?: boolean; partial_warning?: boolean;
+              situation_warning?: boolean; situation_part_warning?: boolean; official_title?: string | null; effective_at?: string | null;
+              source_last_modified_at?: string | null } | null;
+  money: { currency?: string; current?: { rate_per_eur?: number | null; rate_as_of?: string | null; rate_basis?: string | null; is_daily?: boolean } | null;
+           series_120d?: Record<string, unknown>[] } | null;
+  holidays_next_12_months: { holiday_date: string; holiday_name: string }[] | null;
+  tourism: { year: number; arrivals?: number | null; receipts_usd?: number | null; receipts_per_arrival_usd?: number | null; is_pandemic_year?: boolean }[] | null;
+  visa: { as_of?: string | null; by_passport: Record<string, { category: string; days?: number | null }> } | null;
+  destinations: (Omit<IndexDestination, "country_key"> & { country_key?: string })[];
+}

@@ -125,7 +125,8 @@ def render(img_dir, img_id, src):
     alpha = im.mode in ("RGBA", "LA") or (im.mode == "P" and "transparency" in im.info)
     im = im.convert("RGBA" if alpha else "RGB")
     for w, path in out.items():
-        r = im if im.width <= w else im.resize((w, max(1, round(im.height * w / im.width))), Image.LANCZOS)
+        scale = min(1.0, w / im.width, w / im.height)  # limit the longest side, so portrait photos stay small too
+        r = im if scale >= 1 else im.resize((max(1, round(im.width * scale)), max(1, round(im.height * scale))), Image.LANCZOS)
         cap = MAX_BYTES[w]
         for q in (80, 68, 55):  # step quality down only for unusually detailed photos
             r.save(path + ".tmp", "WEBP", quality=q, method=4)
