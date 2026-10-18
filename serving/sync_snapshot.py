@@ -35,6 +35,7 @@ TOKEN = os.environ.get("DATABRICKS_TOKEN", "")
 CATALOG = os.environ.get("ODYSSEY_CATALOG", "odyssey")
 ROOT = os.environ.get("DATA_ROOT", "/srv/odyssey")
 VOLUME = f"/Volumes/{CATALOG}/gold/exports"
+MAX_BYTES = {1600: 700_000, 800: 250_000}  # WebP size caps per width
 
 
 def log(msg):
@@ -125,11 +126,37 @@ def render(img_dir, img_id, src):
     im = im.convert("RGBA" if alpha else "RGB")
     for w, path in out.items():
         r = im if im.width <= w else im.resize((w, max(1, round(im.height * w / im.width))), Image.LANCZOS)
-        r.save(path + ".tmp", "WEBP", quality=80, method=4)
+        cap = MAX_BYTES[w]
+        for q in (80, 68, 55):  # step quality down only for unusually detailed photos
+            r.save(path + ".tmp", "WEBP", quality=q, method=4)
+            if os.path.getsize(path + ".tmp") <= cap:
+                break
         os.replace(path + ".tmp", path)
     for p in legacy:
         os.remove(p)
     return "new"
+
+
+def prune_images():
+    """Delete photo files no kept release references, and any non-WebP leftovers. Never runs on an empty reference set."""
+    used = {}
+    for rel in os.listdir(f"{ROOT}/releases"):
+        if not rel.startswith("."):
+            for dirpath, _, files in os.walk(f"{ROOT}/releases/{rel}"):
+                for name in files:
+                    if name.endswith(".json"):
+                        with open(os.path.join(dirpath, name), encoding="utf-8") as f:
+                            collect_images(json.load(f), used)
+    if not used:
+        return 0
+    img_dir, removed = f"{ROOT}/images", 0
+    for name in os.listdir(img_dir):
+        if name.endswith(".tmp"):
+            continue
+        if not name.endswith(".webp") or name.split("-", 1)[0] not in used:
+            os.remove(os.path.join(img_dir, name))
+            removed += 1
+    return removed
 
 
 def cache_images(release_dir, max_images=None):
@@ -197,9 +224,10 @@ def main():
         os.replace(tmp_link, f"{ROOT}/current")
         for old in sorted(d for d in os.listdir(f"{ROOT}/releases") if not d.startswith("."))[:-3]:
             shutil.rmtree(f"{ROOT}/releases/{old}", ignore_errors=True)
+        pruned = prune_images()
         write_status(ok=True, run_id=latest, changed=True, files=len(manifest["files"]),
                      photos=images, photos_failed=failed)
-        log(f"published {latest}")
+        log(f"published {latest} ({pruned} unused photo files removed)")
         return 0
     except Exception as e:
         log(f"ERROR: {type(e).__name__}: {e}")
