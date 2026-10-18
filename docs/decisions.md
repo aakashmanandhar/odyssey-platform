@@ -175,3 +175,36 @@ Short records of significant decisions: context, decision, consequences. Newest 
 **Findings:** errors accepted: neighbouring businesses at one address, chain branches. Errors rejected: the same place in two scripts, small spelling variants; the near-miss stratum (score >= 0.2) is 69% true matches, so the 0.47 threshold is likely too strict.
 **Limitations:** AI judgements may differ from a careful local human on a few percent of pairs (chain branches, rebrands); a 30-pair human agreement check is planned. Recall is an upper bound because dissimilar-name rejections (e.g. different scripts) were not sampled.
 **Next:** script-aware name features (transliteration), an "address shared by several businesses" feature, threshold re-tuning against these labels, champion/challenger evaluation of future model versions on the same set.
+
+## ADR-020: Classify highlights by Wikidata type, not by title words
+
+**Status:** accepted (2026-10-18)
+
+**Context.** Highlights come from Wikipedia articles near each destination. Title and coordinate-type rules removed
+obvious non-sights, but a full read-through of every destination's top 3 still found companies (Novartis, Cemex),
+sports venues and clubs (San Siro, FC Bayern Munich), events (Oktoberfest, Spengler Cup), organisations (FIFA,
+dioceses), towns listed as sights of a city, places across a border (San Diego under Tijuana) and red-light areas.
+None of these share reliable title words.
+
+**Decision.** Fetch each article's Wikidata types (P31), countries (P17) and the full superclass chain of every type
+(P279*) in a weekly bronze ingest (`ingest_wikidata_types`). A reviewed seed, `wikidata_class_rules`, maps a small set
+of Wikidata classes to a rule: `exclude` (always), `soft_exclude` (unless also a recognised sight), `settlement`
+(allowed on region pages only) and `include` (recognised sight). `silver_wikidata_place_class` turns that into flags per
+item; `mart_destination_highlights` applies them and requires the item's country, when known, to match the
+destination's. Every class ID in the seed was checked against Wikidata's own English label before use.
+
+**Consequences.** The policy is data, reviewable in one CSV, and covers subclasses automatically (a football stadium is
+excluded because it is a sports venue). Items Wikidata does not classify are kept, so nothing legitimate disappears for
+lack of data. Title rules and manual overrides remain as a second safety net. A dbt test fails the build if any
+highlight's type is excluded.
+
+**Refinement (same day, after a dev read-through).** Wikidata attaches broad classes to real sights (museums inherit
+"business", the Colosseum "sports venue", Jemaa el-Fnaa "planned event"), so only classes that are never a sight stay a
+hard `exclude` (sports clubs and competitions, disasters, battles, expeditions, red-light districts, border crossings,
+nightclubs, military bases, convention centres); the rest are `soft_exclude`, i.e. dropped only when the item is not also
+a recognised sight. Towns are allowed on region pages. The country check applies to cities only and accepts enclaves
+and historical states listed in seed `country_qid_aliases` (Vatican City, East Germany, Holy Roman Empire, ...).
+Famous sights that Wikidata types poorly (The Last Supper as a painting, Galleria Vittorio Emanuele II as a shopping
+centre) are kept through an explicit, reasoned `keep` row in seed `highlight_overrides`. Verified against every
+destination's top 3: 102 non-sights removed, no known sight lost; 7 destinations whose only candidates were non-sights
+now honestly show none.

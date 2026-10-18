@@ -1,0 +1,61 @@
+class_qid,label,rule
+Q4830453,business,soft_exclude
+Q783794,company,soft_exclude
+Q1076486,sports venue,soft_exclude
+Q483110,stadium,soft_exclude
+Q847017,sports club,exclude
+Q13406554,sports competition,exclude
+Q1656682,planned event,soft_exclude
+Q3839081,disaster,exclude
+Q1190554,occurrence,soft_exclude
+Q178561,battle,exclude
+Q2401485,expedition,exclude
+Q3914,school,soft_exclude
+Q38723,higher education institution,soft_exclude
+Q31855,research institute,soft_exclude
+Q11315,shopping center,soft_exclude
+Q665487,diocese,soft_exclude
+Q44377,tunnel,soft_exclude
+Q1378975,convention center,exclude
+Q27686,hotel,soft_exclude
+Q11707,restaurant,soft_exclude
+Q622425,nightclub,exclude
+Q272888,red-light district,exclude
+Q55599109,border crossing,exclude
+Q245016,military base,exclude
+Q43229,organization,soft_exclude
+Q486972,human settlement,settlement
+Q56061,administrative territorial entity,settlement
+Q570116,tourist attraction,include
+Q1370598,structure of worship,include
+Q44613,monastery,include
+Q33506,museum,include
+Q23413,castle,include
+Q16560,palace,include
+Q57821,fortification,include
+Q4989906,monument,include
+Q5003624,memorial,include
+Q839954,archaeological site,include
+Q22698,park,include
+Q1107656,garden,include
+Q174782,square,include
+Q12280,bridge,include
+Q12518,tower,include
+Q8502,mountain,include
+Q23397,lake,include
+Q34038,waterfall,include
+Q35666,glacier,include
+Q35509,cave,include
+Q23442,island,include
+Q40080,beach,include
+Q4022,river,include
+Q473972,protected area,include
+Q46169,national park,include
+Q9259,World Heritage Site,include
+Q358,heritage site,include
+Q43501,zoo,include
+Q194195,amusement park,include
+Q153562,opera house,include
+Q24354,theatre building,include
+Q39614,cemetery,include
+Q39715,lighthouse,include

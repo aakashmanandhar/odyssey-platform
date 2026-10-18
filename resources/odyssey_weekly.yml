@@ -70,8 +70,13 @@ resources:
             notebook_path: ../ml/train_place_matcher.py
             base_parameters:
               catalog: ${var.catalog}
+        - task_key: ingest_wikidata_types
+          depends_on: [{task_key: dbt_build}]
+          notebook_task:
+            notebook_path: ../jobs/ingest_wikidata_types.py
+            base_parameters: {catalog: "${var.catalog}"}
         - task_key: dbt_build_places
-          depends_on: [{task_key: train_place_matcher}]
+          depends_on: [{task_key: train_place_matcher}, {task_key: ingest_wikidata_types}]
           environment_key: dbt
           dbt_task:
             project_directory: ../transform

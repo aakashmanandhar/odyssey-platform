@@ -3,9 +3,14 @@
 -- Built from every eligible Wikipedia article (so famous places missing from Overture/Foursquare still appear),
 -- linked to the golden place where one was matched. Score = log10(1 + 30-day page views)
 -- + 0.3 for a usable photo + 0.2 when the place is confirmed by both place sources.
--- Eligible: not an area article; not infrastructure, institutions, venues or events (type and whole-word title
--- rules, incl. local-language stadium words); a matched place must be a sight or activity or a landmark;
--- an unmatched article must be a typed physical feature.
+-- Eligibility, in order of strength:
+--   1) Wikidata classification (silver_wikidata_place_class, policy in seed wikidata_class_rules, ADR-020):
+--      never clubs, competitions, disasters or red-light areas; businesses, venues, events, schools and organisations only
+--      when they are also a recognised sight; no towns on city pages; for cities, no places Wikidata puts in another
+--      country (enclaves and historical states via seed country_qid_aliases); seed overrides can 'keep' a known sight;
+--   2) not an area article; title and coordinate-type rules for infrastructure, institutions, venues and events;
+--   3) a matched place must be a sight or activity or a landmark; an unmatched article must be a typed physical feature;
+--   4) manual overrides (seed highlight_overrides).
 -- Membership: an article found by several destinations' searches belongs to the nearest destination centre,
 -- and also to any other destination at most 1.10x that distance (so twin cities like Kathmandu and Lalitpur
 -- no longer share the same top sights, while places genuinely between two destinations can still appear in both).
@@ -36,7 +41,11 @@ base as (
         coalesce(regexp_extract(lower(n.coord_type), '^([a-z]+)', 1), '')       as wiki_type,
         w.odyssey_place_id, w.thumb_url as place_photo, w.credit_text as place_credit,
         p.odyssey_category, p.sources,
-        ph.thumb_url as article_photo, ph.author as article_photo_author, ph.license_short as article_photo_license
+        ph.thumb_url as article_photo, ph.author as article_photo_author, ph.license_short as article_photo_license,
+        wc.is_excluded_type, wc.is_soft_excluded_type, wc.is_settlement, wc.is_sight, wc.country_qids,
+        dd.kind                                                                  as destination_kind,
+        dc.wikidata_id                                                           as destination_country_qid,
+        array_union(array(dc.wikidata_id), coalesce(al.alias_qids, array()))     as destination_country_qids
     from (
         select a.* except (destination_qid, country_iso3), m.destination_qid, m.country_iso3
         from {{ ref('silver_notable_places') }} a
@@ -45,6 +54,11 @@ base as (
     left join {{ ref('dim_place_wiki') }} w on w.wikipedia_page_id = n.page_id
     left join {{ ref('dim_place') }} p on p.odyssey_place_id = w.odyssey_place_id
     left join photos ph on ph.k = lower(replace(n.page_image, '_', ' '))
+    left join {{ ref('silver_wikidata_place_class') }} wc on wc.wikidata_id = n.wikidata_id
+    left join {{ ref('dim_destination') }} dd on dd.destination_key = n.destination_qid
+    left join {{ ref('dim_country') }} dc on dc.country_key = n.country_iso3
+    left join (select country_key, collect_set(wikidata_id) as alias_qids
+               from {{ ref('country_qid_aliases') }} group by country_key) al on al.country_key = n.country_iso3
 ),
 eligible as (
     select
@@ -61,10 +75,22 @@ eligible as (
                       ' · ', article_photo_license, ' · Wikimedia Commons') end) as photo_credit
     from base
     where not is_area_article
+      -- 1) Wikidata classification (bypassed only by an explicit 'keep' override) and, for cities, the country check
+      and not coalesce(is_excluded_type, false)
+      and (
+            title_clean in (select wikipedia_title from {{ ref('highlight_overrides') }} where action = 'keep')
+         or (    not (coalesce(is_soft_excluded_type, false) and not coalesce(is_sight, false)
+                      and not (coalesce(is_settlement, false) and destination_kind <> 'city'))
+             and not (coalesce(is_settlement, false) and not coalesce(is_sight, false) and destination_kind = 'city'))
+      )
+      and (destination_kind <> 'city' or country_qids is null or size(country_qids) = 0 or destination_country_qid is null
+           or arrays_overlap(country_qids, destination_country_qids))
+      -- 2) title and coordinate-type rules
       and title_clean not in (select wikipedia_title from {{ ref('highlight_overrides') }} where action = 'exclude')
       and wiki_type not in ('railwaystation', 'edu', 'airport', 'event')
       and not lower(title) rlike '\\b(incident|battle|massacre|earthquake|prefecture|province|district|university|college|school|station|airport|kingdom|empire|dynasty|republic|court|exchange|ministry|embassy|bank|hospital|parliament|stadium|heart centre|medical|clinic|history of|list of)\\b'
-      and not lower(title) rlike '\\b(disaster|tragedy|attacks?|bombings?|shootings?|siege|riots?|protests?|uprising|revolution|eruption|floods?|crash|derailment|pandemic|fire of|festival|carnival|film festival|olympics|world cup|grand prix|circuit|autodromo|autódromo|racecourse|racetrack|speedway|estadio|stade|stadio|stadion|deportes|deportivo|election|treaty|summit|federation|confederation|association|committee)\\b'
+      and not lower(title) rlike '\\b(disaster|tragedy|attacks?|bombings?|shootings?|siege|riots?|protests?|uprising|revolution|eruptions?|floods?|crash|derailment|pandemic|fire of|festival|carnival|film festival|olympics|world cup|grand prix|circuit|autodromo|autódromo|racecourse|racetrack|speedway|estadio|stade|stadio|stadion|deportes|deportivo|election|treaty|summit|federation|confederation|association|committee)\\b'
+      -- 3) place-type rules
       and (
             (odyssey_place_id is not null and (odyssey_category in ('see', 'do') or wiki_type = 'landmark'))
          or (odyssey_place_id is null and wiki_type in ('landmark', 'mountain', 'waterbody', 'glacier', 'river', 'forest'))
