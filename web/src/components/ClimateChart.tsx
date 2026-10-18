@@ -2,7 +2,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { ClimateMonth } from "../lib/types";
 import { MONTHS, MONTHS_LONG } from "../lib/months";
-import { useWidth } from "../lib/useWidth";
+import { fitPlot, useSize } from "../lib/useSize";
 import { colPath, niceMax } from "../lib/chart";
 
 // One compact chart, three measures behind a toggle (one y-scale at a time, never a dual axis).
@@ -13,14 +13,14 @@ type Metric = "comfort" | "temp" | "rain";
 const METRICS: { key: Metric; label: string }[] = [{ key: "comfort", label: "Comfort" }, { key: "temp", label: "Temperature" }, { key: "rain", label: "Rain" }];
 
 export function ClimateChart({ months, month, onMonth }: { months: ClimateMonth[]; month: number; onMonth: (m: number) => void }) {
-  const [ref, W] = useWidth<HTMLDivElement>();
+  const [ref, W, CH] = useSize<HTMLDivElement>();
   const [metric, setMetric] = useState<Metric>("comfort");
   const [hover, setHover] = useState<number | null>(null);
   const [table, setTable] = useState(false);
   const ms = [...months].sort((a, b) => a.month_num - b.month_num);
   if (ms.length !== 12) return null;
 
-  const L = 38, R = 6, TOP = 12, P = 168, XL = 22, H = TOP + P + XL;
+  const L = 38, R = 6, TOP = 12, XL = 22, P = fitPlot(CH, TOP + XL, 168), H = TOP + P + XL;
   const bw = Math.max(0, W - L - R) / 12, barW = Math.min(24, bw * 0.58), x = (i: number) => L + bw * i + bw / 2;
   const lows = ms.map((m) => m.temp_min_c ?? m.temp_mean_c ?? 0), highs = ms.map((m) => m.temp_max_c ?? m.temp_mean_c ?? 0);
   const tLo = Math.floor((Math.min(...lows) - 1) / 5) * 5, tHi = Math.ceil((Math.max(...highs) + 1) / 5) * 5;

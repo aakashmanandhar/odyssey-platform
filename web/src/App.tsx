@@ -17,10 +17,10 @@ export default function App() {
           transition={{ duration: 0.28, ease: [0.2, 0.7, 0.2, 1] }}>
           <Routes location={location}>
             <Route path="/" element={<Home />} />
-            <Route path="/explore" element={<Soon title="Explore all destinations" note="Filter all 208 destinations by month, country and type. Arrives in step 5.4." />} />
+            <Route path="/explore" element={<Soon title="Explore all destinations" note="Filter all 208 destinations by month, country and type." />} />
             <Route path="/countries" element={<Countries />} />
-            <Route path="/compare" element={<Soon title="Compare destinations" note="Two or three places side by side, climate curves overlaid. Arrives in step 5.4." />} />
-            <Route path="/about" element={<Soon title="How it's built" note="Data sources, freshness and model accuracy. Arrives in step 5.4." />} />
+            <Route path="/compare" element={<Soon title="Compare destinations" note="Two or three places side by side, climate curves overlaid." />} />
+            <Route path="/about" element={<Soon title="How it's built" note="Data sources, freshness and model accuracy." />} />
             <Route path="/d/:key" element={<Destination />} />
             <Route path="/c/:key" element={<Country />} />
             <Route path="*" element={<Soon title="Page not found" note="That address doesn't exist. Try search, or head back home." />} />
