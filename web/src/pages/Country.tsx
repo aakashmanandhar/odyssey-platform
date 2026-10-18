@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useJSON } from "../lib/data";
 import type { CountryFile, IndexFile } from "../lib/types";
 import { fmtDate, nf } from "../lib/format";
@@ -14,6 +14,8 @@ import { RateChart } from "../components/RateChart";
 import { DestinationCard } from "../components/DestinationCard";
 import { LoadError, Loading } from "../components/State";
 import { Soon } from "./Soon";
+import { Tabs } from "../components/Tabs";
+import { Carousel } from "../components/Carousel";
 
 const reveal = { initial: { opacity: 0, y: 18 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, margin: "-60px" }, transition: { duration: 0.55 } };
 const AA_URL = "https://www.auswaertiges-amt.de/de/ReiseUndSicherheit/reise-und-sicherheitshinweise";
@@ -107,10 +109,13 @@ function Holidays({ c }: { c: CountryFile }) {
   );
 }
 
+type CTab = "glance" | "money" | "holidays" | "tourism" | "destinations";
+
 export default function Country() {
   const { key } = useParams();
   const { data: c, error } = useJSON<CountryFile>(key ? `countries/${key}.json` : null);
   const { data: index } = useJSON<IndexFile>("index.json");
+  const [tab, setTab] = useState<CTab>("glance");
   if (error) return error.includes("404") ? <Soon title="Country not found" note="This link doesn't match any country in the current data." /> : <LoadError message={error} />;
   if (!c) return <Loading label="Loading country" />;
   const ic = index?.countries.find((x) => x.key === c.country.country_key);
@@ -120,6 +125,7 @@ export default function Country() {
   const rate = c.money?.current?.rate_per_eur ?? p?.rate_per_eur;
   const pop = p?.population ?? c.country.population;
   const dests = [...c.destinations].sort((a, b) => (b.highlights ?? 0) - (a.highlights ?? 0));
+  const hols = c.holidays_next_12_months?.length ?? 0;
   const tourism = (c.tourism ?? []).map((t) => ({
     year: t.year, value: t.arrivals ?? null, muted: !!t.is_pandemic_year,
     detail: [["Visitors", t.arrivals != null ? compact.format(t.arrivals) : "–"], ["Spending", t.receipts_usd != null ? `$${compact.format(t.receipts_usd)}` : "–"],
@@ -131,86 +137,73 @@ export default function Country() {
     c.country.area_km2 && { k: "Area", v: `${compact.format(c.country.area_km2)} km²`, s: "Land and water" },
     c.country.official_languages?.length && { k: "Language", v: c.country.official_languages.slice(0, 2).join(", "), s: "Official" },
     rate && cur && cur !== "EUR" && { k: "Money", v: `1 € = ${rate.toLocaleString("en-GB", { maximumFractionDigits: rate < 10 ? 3 : 2 })} ${cur}`, s: c.money?.current?.is_daily ? "ECB daily rate" : "Annual average rate" },
-    cur === "EUR" && { k: "Money", v: "Euro (€)", s: "No exchange needed from the eurozone" },
+    cur === "EUR" && { k: "Money", v: "Euro (€)", s: "No exchange needed in the eurozone" },
     p?.price_level_ratio && { k: "Price level", v: `${Math.round(p.price_level_ratio * 100)}% of US`, s: `World Bank, ${p.price_level_year ?? ""}` },
   ].filter(Boolean) as { k: string; v: string; s: string }[];
+  const tabs = [
+    { key: "glance" as const, label: "At a glance" },
+    ...(cur ? [{ key: "money" as const, label: "Money" }] : []),
+    ...(hols ? [{ key: "holidays" as const, label: "Holidays", count: hols }] : []),
+    ...(tourism.length > 1 ? [{ key: "tourism" as const, label: "Tourism" }] : []),
+    { key: "destinations" as const, label: "Destinations", count: dests.length },
+  ];
+  const active = tabs.some((t) => t.key === tab) ? tab : "glance";
 
   return (
-    <>
-      <section className="wrap">
-        <div className="dest-hero">
+    <div className="page-fit dpage cpage">
+      <section className="dtop">
+        <motion.div className="dest-hero compact" initial={{ opacity: 0, scale: 0.985 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}>
           {cover && <Img photo={cover} size={1600} alt={c.country.country_name} priority showCredit={false} />}
           {cover && <div className="dest-credit"><Credit photo={cover} down /></div>}
-          <motion.div className="dest-hero-in" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+          <div className="dest-hero-in">
             <nav className="crumbs" aria-label="Breadcrumb"><Link to="/">Home</Link><span>/</span><Link to="/countries">Countries</Link></nav>
             <h1>{c.country.country_name}</h1>
             <div className="dest-chips">
               <StatusBadge tone={adv.tone} label={adv.title} onPhoto />
               {c.country.region && <span className="dchip"><Icon name="globe" size={14} />{c.country.region}</span>}
-              <span className="dchip">{c.destinations.length} destinations</span>
+              {c.country.capital && <span className="dchip">Capital {c.country.capital}</span>}
+              <span className="dchip">{dests.length} destinations</span>
             </div>
+          </div>
+        </motion.div>
+        <motion.aside className="panel planner-wrap entry" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.1 }}>
+          <div className="pl-head"><span className="eyebrow">Entry check</span><span className="muted small0">Visa by passport</span></div>
+          <Visa c={c} />
+        </motion.aside>
+      </section>
+
+      <div className="tabbar-wrap"><Tabs id="country" tabs={tabs} active={active} onChange={setTab} /></div>
+
+      <section className="tabpanel">
+        <AnimatePresence mode="wait">
+          <motion.div key={active} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.22 }}>
+            {active === "glance" && (
+              <div className="glance">
+                <div className="facts tight">{facts.map((f, i) => (
+                  <motion.div key={f.k} className="fact" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+                    <span className="k">{f.k}</span><span className="v">{f.v}</span><span className="s">{f.s}</span>
+                  </motion.div>))}</div>
+                <div className="panel adv-card">
+                  <h3 className="ph3">Official travel advice</h3>
+                  <StatusBadge tone={adv.tone} label={adv.title} />
+                  <p className="adv-text">{adv.text}</p>
+                  {c.advisory && <p className="source">{c.advisory.issuer}{c.advisory.effective_at ? `, in effect since ${fmtDate(c.advisory.effective_at)}` : ""}. <a href={AA_URL} target="_blank" rel="noreferrer">Official source</a></p>}
+                </div>
+              </div>
+            )}
+            {active === "money" && (
+              <div className="panel">
+                {cur === "EUR" ? <p className="muted">{c.country.country_name} uses the euro, so there's no exchange rate to watch from the eurozone.</p>
+                  : (c.money?.series_120d?.length ?? 0) > 4 ? <RateChart series={c.money!.series_120d!} currency={cur} />
+                  : <p className="muted">{cur} isn't published by the European Central Bank, so there's no daily trend. The rate shown is the World Bank annual average{c.money?.current?.rate_as_of ? ` (${new Date(c.money.current.rate_as_of).getFullYear()})` : ""}, converted to euros.</p>}
+              </div>
+            )}
+            {active === "holidays" && <div className="panel hol-panel"><Holidays c={c} /></div>}
+            {active === "tourism" && <div className="panel"><YearChart rows={tourism} title="International visitors" mutedLabel="Pandemic year" /></div>}
+            {active === "destinations" && <Carousel label={`Destinations in ${c.country.country_name}`}>{dests.map((d) => <DestinationCard key={d.key} d={{ ...d, country_key: c.country.country_key }} country={c.country.country_name} />)}</Carousel>}
           </motion.div>
-        </div>
+        </AnimatePresence>
       </section>
-
-      <nav className="subnav" aria-label="On this page">
-        <div className="wrap subnav-in">
-          <a href="#overview">Overview</a><a href="#entry">Visa & safety</a>
-          {(c.holidays_next_12_months?.length ?? 0) > 0 && <a href="#holidays">Holidays</a>}
-          {tourism.length > 1 && <a href="#tourism">Tourism</a>}
-          <a href="#destinations">Destinations</a>
-        </div>
-      </nav>
-
-      <section id="overview" className="wrap anchor">
-        <div className="facts">
-          {facts.map((f, i) => (
-            <motion.div key={f.k} className="fact" initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }}>
-              <span className="k">{f.k}</span><span className="v">{f.v}</span><span className="s">{f.s}</span>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      <section id="entry" className="wrap sec anchor">
-        <motion.div className="sec-hd" {...reveal}><p className="eyebrow">Before you go</p><h2>Visa and safety</h2></motion.div>
-        <div className="entry-grid">
-          <motion.div className="panel" {...reveal}><h3 className="ph3">Do I need a visa?</h3><Visa c={c} /></motion.div>
-          <motion.div className="panel" {...reveal}>
-            <h3 className="ph3">Official travel advice</h3>
-            <StatusBadge tone={adv.tone} label={adv.title} />
-            <p className="adv-text">{adv.text}</p>
-            {c.advisory && <p className="source">{c.advisory.issuer}{c.advisory.effective_at ? `, in effect since ${fmtDate(c.advisory.effective_at)}` : ""}. <a href={AA_URL} target="_blank" rel="noreferrer">Official source</a></p>}
-          </motion.div>
-        </div>
-        {cur && cur !== "EUR" && (
-          <motion.div className="panel money" {...reveal}>
-            <h3 className="ph3">Money</h3>
-            {(c.money?.series_120d?.length ?? 0) > 4
-              ? <RateChart series={c.money!.series_120d!} currency={cur} />
-              : <p className="muted">{cur} isn't published by the European Central Bank, so there's no daily trend. The rate shown above is the World Bank annual average{c.money?.current?.rate_as_of ? ` (${new Date(c.money.current.rate_as_of).getFullYear()})` : ""}, converted to euros.</p>}
-          </motion.div>
-        )}
-      </section>
-
-      {(c.holidays_next_12_months?.length ?? 0) > 0 && (
-        <section id="holidays" className="wrap sec anchor">
-          <motion.div className="sec-hd" {...reveal}><p className="eyebrow">Plan around</p><h2>Public holidays</h2><p className="muted">Festivals are wonderful to see, but shops, offices and transport can close, and prices rise.</p></motion.div>
-          <motion.div className="panel" {...reveal}><Holidays c={c} /></motion.div>
-        </section>
-      )}
-
-      {tourism.length > 1 && (
-        <section id="tourism" className="wrap sec anchor">
-          <motion.div className="sec-hd" {...reveal}><p className="eyebrow">Tourism</p><h2>Visitors per year</h2><p className="muted">International arrivals from World Bank data. Hover or tap a year for spending.</p></motion.div>
-          <motion.div className="panel" {...reveal}><YearChart rows={tourism} title="International visitors" mutedLabel="Pandemic year" /></motion.div>
-        </section>
-      )}
-
-      <section id="destinations" className="wrap sec anchor">
-        <motion.div className="sec-hd" {...reveal}><p className="eyebrow">Where to go</p><h2>Destinations in {c.country.country_name}</h2></motion.div>
-        <div className="grid">{dests.map((d) => <DestinationCard key={d.key} d={{ ...d, country_key: c.country.country_key }} country={c.country.country_name} />)}</div>
-      </section>
-    </>
+    </div>
   );
 }
